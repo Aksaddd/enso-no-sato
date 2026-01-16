@@ -694,21 +694,77 @@ body {
    RESPONSIVE
    ============================================ */
 
-@media (max-width: 768px) {
+/* Large tablets and small desktops */
+@media (max-width: 1024px) {
     .hero {
-        padding: var(--spacing-md) var(--spacing-sm);
+        padding: var(--spacing-md);
     }
     
     .logo {
-        width: clamp(220px, 70vw, 320px);
+        width: clamp(250px, 45vw, 400px);
     }
     
-    .footer {
-        bottom: 100px;
+    .coming-soon {
+        font-size: clamp(1.4rem, 4vw, 2rem);
+        letter-spacing: 0.4em;
     }
     
     .footer-tagline {
+        font-size: clamp(1.2rem, 3vw, 1.8rem);
         letter-spacing: 0.25em;
+    }
+    
+    .footer-address {
+        font-size: clamp(1rem, 2vw, 1.3rem);
+    }
+}
+
+/* Tablets */
+@media (max-width: 768px) {
+    :root {
+        --spacing-lg: 2.5rem;
+        --spacing-xl: 4rem;
+    }
+    
+    .hero {
+        padding: var(--spacing-md) var(--spacing-sm);
+        min-height: 100svh; /* Use small viewport height for mobile */
+    }
+    
+    .logo {
+        width: clamp(200px, 60vw, 300px);
+    }
+    
+    .coming-soon {
+        font-size: clamp(1.1rem, 5vw, 1.6rem);
+        letter-spacing: 0.3em;
+        margin-top: var(--spacing-sm);
+    }
+    
+    .footer {
+        bottom: 80px;
+        width: 90%;
+        padding: 0 var(--spacing-sm);
+    }
+    
+    .footer-tagline {
+        font-size: clamp(1rem, 4vw, 1.4rem);
+        letter-spacing: 0.2em;
+        margin-bottom: var(--spacing-xs);
+    }
+    
+    .footer-address {
+        font-size: clamp(0.85rem, 3vw, 1.1rem);
+        letter-spacing: 0.08em;
+    }
+    
+    .social-link svg {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .social-handle {
+        font-size: 1rem;
     }
     
     .gallery-container {
@@ -722,8 +778,20 @@ body {
         background: var(--color-bg-charcoal);
     }
     
+    .gallery-title {
+        font-size: clamp(1.4rem, 5vw, 2rem);
+    }
+    
+    .gallery-subtitle {
+        font-size: clamp(0.9rem, 3vw, 1.1rem);
+    }
+    
     .info-grid {
         grid-template-columns: 1fr;
+    }
+    
+    .info-title {
+        font-size: clamp(1.1rem, 4vw, 1.4rem);
     }
     
     .scroll-indicator {
@@ -731,19 +799,159 @@ body {
     }
 }
 
+/* Mobile phones */
 @media (max-width: 480px) {
+    :root {
+        --spacing-md: 1.5rem;
+        --spacing-lg: 2rem;
+        --spacing-xl: 3rem;
+    }
+    
+    .hero {
+        padding: var(--spacing-sm);
+    }
+    
     .logo {
-        width: 200px;
+        width: clamp(180px, 70vw, 250px);
     }
     
     .coming-soon {
-        letter-spacing: 0.3em;
+        font-size: clamp(0.9rem, 5vw, 1.2rem);
+        letter-spacing: 0.25em;
+    }
+    
+    .footer {
+        bottom: 60px;
+        width: 95%;
+    }
+    
+    .footer-tagline {
+        font-size: clamp(0.85rem, 4.5vw, 1.1rem);
+        letter-spacing: 0.15em;
+    }
+    
+    .footer-address {
+        font-size: clamp(0.75rem, 3.5vw, 0.95rem);
+        letter-spacing: 0.05em;
+    }
+    
+    .social-link svg {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .social-handle {
+        font-size: 0.85rem;
+    }
+    
+    .gallery-section {
+        padding: var(--spacing-lg) var(--spacing-sm);
+    }
+    
+    .gallery-header {
+        margin-bottom: var(--spacing-lg);
+    }
+    
+    .gallery-title {
+        font-size: 1.3rem;
+    }
+    
+    .haiku-text {
+        font-size: 0.9rem;
+    }
+    
+    .info-section {
+        padding: var(--spacing-lg) var(--spacing-sm);
+    }
+    
+    .story-block {
+        padding-bottom: var(--spacing-lg);
+        margin-bottom: var(--spacing-lg);
+    }
+    
+    .info-block {
+        padding: var(--spacing-sm);
+    }
+    
+    .resy-button {
+        padding: 0.7rem 1.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .final-footer {
+        padding: var(--spacing-lg) var(--spacing-sm);
+    }
+    
+    .footer-logo {
+        width: 100px;
+    }
+    
+    .final-tagline {
+        font-size: 0.95rem;
+    }
+    
+    .final-address {
+        font-size: 0.8rem;
+    }
+}
+
+/* Very small phones */
+@media (max-width: 360px) {
+    .logo {
+        width: 160px;
+    }
+    
+    .coming-soon {
+        font-size: 0.85rem;
+        letter-spacing: 0.2em;
+    }
+    
+    .footer-tagline {
+        font-size: 0.8rem;
+        letter-spacing: 0.1em;
+    }
+    
+    .footer-address {
+        font-size: 0.7rem;
+    }
+}
+
+/* Landscape phones */
+@media (max-height: 500px) and (orientation: landscape) {
+    .hero {
+        min-height: 100vh;
+        padding: var(--spacing-sm);
+    }
+    
+    .logo {
+        width: clamp(120px, 25vh, 200px);
+    }
+    
+    .coming-soon {
         font-size: 1rem;
+        margin-top: var(--spacing-xs);
+    }
+    
+    .footer {
+        bottom: 10px;
     }
     
     .footer-tagline {
         font-size: 0.9rem;
-        letter-spacing: 0.2em;
+        margin-bottom: 0.25rem;
+    }
+    
+    .footer-address {
+        font-size: 0.8rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .footer-social {
+        margin-top: 0.25rem;
+    }
+    
+    .social-handle {
+        font-size: 0.8rem;
     }
 }
 
