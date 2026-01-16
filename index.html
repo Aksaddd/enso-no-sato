@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Ensō no Sato - Luxury Omakase & Izakaya Bar. Coming Soon to Huntington, NY.">
+    <title>Ensō no Sato | Coming Soon</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Noto+Serif+JP:wght@200;300;400;500&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Video Background Container -->
+    <div class="video-container">
+        <video 
+            class="bg-video"
+            autoplay 
+            muted 
+            loop 
+            playsinline
+            preload="auto"
+        >
+            <source src="assets/enso-koi-loop.mp4" type="video/mp4">
+        </video>
+        <div class="video-overlay"></div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <!-- Large Centered Logo -->
+            <div class="logo-container">
+                <img 
+                    src="assets/logo.png" 
+                    alt="Ensō no Sato" 
+                    class="logo"
+                >
+            </div>
+
+            <!-- Coming Soon -->
+            <p class="coming-soon">COMING SOON</p>
+        </div>
+
+        <!-- Footer Info -->
+        <footer class="footer">
+            <p class="footer-tagline">Omakase & Izakaya Bar</p>
+            <p class="footer-address">273 Main Street, Huntington, NY 11743</p>
+            <div class="footer-social">
+                <a href="https://www.instagram.com/ensonosato" target="_blank" rel="noopener" class="social-link">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                    <span class="social-handle">@ensonosato</span>
+                </a>
+            </div>
+        </footer>
+
+        <!-- Scroll Indicator -->
+        <div class="scroll-indicator">
+            <span>Explore</span>
+            <div class="scroll-arrow"></div>
+        </div>
+    </section>
+
+    <!-- Gallery Section -->
+    <section class="gallery-section">
+        <div class="gallery-header">
+            <h2 class="gallery-title">A Glimpse of What Awaits</h2>
+            <p class="gallery-subtitle">Tradition reimagined, one course at a time</p>
+        </div>
+
+        <div class="gallery-container">
+            <!-- Gallery Item 1 -->
+            <div class="gallery-item">
+                <div class="gallery-image-wrapper">
+                    <img src="assets/gallery/dish-1.jpg" alt="Oyster with caviar and ikura" class="gallery-image" onclick="openLightbox(this.src)">
+                </div>
+                <div class="gallery-haiku">
+                    <p class="haiku-text">
+                        Pearls from the deep sea<br>
+                        Amber jewels catch the light<br>
+                        Ocean's gift, unveiled
+                    </p>
+                </div>
+            </div>
+
+            <!-- Gallery Item 2 -->
+            <div class="gallery-item">
+                <div class="gallery-image-wrapper">
+                    <img src="assets/gallery/dish-2.jpg" alt="Artistic sashimi arrangement" class="gallery-image" onclick="openLightbox(this.src)">
+                </div>
+                <div class="gallery-haiku">
+                    <p class="haiku-text">
+                        Autumn maple falls<br>
+                        Colors bloom upon the plate<br>
+                        Nature's art displayed
+                    </p>
+                </div>
+            </div>
+
+            <!-- Gallery Item 3 -->
+            <div class="gallery-item">
+                <div class="gallery-image-wrapper">
+                    <img src="assets/gallery/dish-3.jpg" alt="Scallop presentation on volcanic stone" class="gallery-image" onclick="openLightbox(this.src)">
+                </div>
+                <div class="gallery-haiku">
+                    <p class="haiku-text">
+                        From volcanic stone<br>
+                        Delicate blooms rise and sway<br>
+                        Earth cradles the sea
+                    </p>
+                </div>
+            </div>
+
+            <!-- Gallery Item 4 -->
+            <div class="gallery-item">
+                <div class="gallery-image-wrapper">
+                    <img src="assets/gallery/dish-4.jpg" alt="Fresh fish selection" class="gallery-image" onclick="openLightbox(this.src)">
+                </div>
+                <div class="gallery-haiku">
+                    <p class="haiku-text">
+                        Morning's first catch rests<br>
+                        In cedar, the sea still breathes<br>
+                        Freshness, unadorned
+                    </p>
+                </div>
+            </div>
+
+            <!-- Gallery Item 5 -->
+            <div class="gallery-item">
+                <div class="gallery-image-wrapper">
+                    <img src="assets/gallery/dish-5.jpg" alt="Yakitori on charcoal grill" class="gallery-image" onclick="openLightbox(this.src)">
+                </div>
+                <div class="gallery-haiku">
+                    <p class="haiku-text">
+                        Charcoal whispers low<br>
+                        Smoke dances, flames embrace meat<br>
+                        Ancient fire, new life
+                    </p>
+                </div>
+            </div>
+
+            <!-- Gallery Item 6 -->
+            <div class="gallery-item">
+                <div class="gallery-image-wrapper">
+                    <img src="assets/gallery/drink-1.jpg" alt="Tropical cocktail" class="gallery-image" onclick="openLightbox(this.src)">
+                </div>
+                <div class="gallery-haiku">
+                    <p class="haiku-text">
+                        Paper parasol<br>
+                        Guards golden nectar below<br>
+                        Summer in a glass
+                    </p>
+                </div>
+            </div>
+
+            <!-- Gallery Item 7 -->
+            <div class="gallery-item">
+                <div class="gallery-image-wrapper">
+                    <img src="assets/gallery/drink-2.jpg" alt="Matcha cocktail" class="gallery-image" onclick="openLightbox(this.src)">
+                </div>
+                <div class="gallery-haiku">
+                    <p class="haiku-text">
+                        Jade light through the glass<br>
+                        Mint and citrus intertwine<br>
+                        Garden in repose
+                    </p>
+                </div>
+            </div>
+
+            <!-- Gallery Item 8 -->
+            <div class="gallery-item">
+                <div class="gallery-image-wrapper">
+                    <img src="assets/gallery/drink-3.jpg" alt="Amber whisky cocktail" class="gallery-image" onclick="openLightbox(this.src)">
+                </div>
+                <div class="gallery-haiku">
+                    <p class="haiku-text">
+                        Moss beneath crystal<br>
+                        Amber glows like trapped sunlight<br>
+                        Forest spirits wake
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Lightbox Modal -->
+    <div class="lightbox" id="lightbox">
+        <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+        <span class="lightbox-nav lightbox-prev" onclick="navigateLightbox(-1)">&#8249;</span>
+        <div class="lightbox-content">
+            <div class="lightbox-image-container">
+                <img src="" alt="Enlarged view" class="lightbox-image" id="lightbox-image">
+            </div>
+            <div class="lightbox-haiku-container">
+                <p class="lightbox-haiku" id="lightbox-haiku"></p>
+            </div>
+        </div>
+        <span class="lightbox-nav lightbox-next" onclick="navigateLightbox(1)">&#8250;</span>
+    </div>
+
+    <!-- Info Section -->
+    <section class="info-section">
+        <div class="info-container">
+            <div class="info-block story-block">
+                <h3 class="info-title">Our Story</h3>
+                <p class="info-text">
+                    Ensō no Sato is a modern Japanese dining sanctuary where the precision of omakase 
+                    converges with the warmth and spontaneity of izakaya culture. Here, tradition is not 
+                    repeated — it is reimagined.
+                </p>
+                <p class="info-text">
+                    Led by chefs with Michelin-starred expertise, every dish is a study in seasonality, 
+                    technique, and refined execution, presented in a way that is elegant yet effortlessly inviting.
+                </p>
+                <p class="info-tagline">Exquisite. Approachable. Timelessly reimagined.</p>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-block">
+                    <h3 class="info-title">Hours</h3>
+                    <div class="hours-content">
+                        <div class="hours-item">
+                            <h4>Izakaya Bar</h4>
+                            <p>Daily: Noon – 9:30pm</p>
+                        </div>
+                        <div class="hours-item">
+                            <h4>Omakase</h4>
+                            <p>Wed – Sun Lunch: 2pm – 4pm</p>
+                            <p>Daily Dinner Seatings:</p>
+                            <p>5:30pm · 7:00pm · 8:00pm</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-block">
+                    <h3 class="info-title">Experience</h3>
+                    <div class="experience-list">
+                        <div class="experience-item">
+                            <span class="experience-label">18 Course Omakase</span>
+                            <span class="experience-price">$135</span>
+                        </div>
+                        <div class="experience-item">
+                            <span class="experience-label">12 Course Omakase</span>
+                            <span class="experience-price">$85</span>
+                        </div>
+                        <div class="experience-item">
+                            <span class="experience-label">Kitchen & Bar Menu</span>
+                            <span class="experience-price">À la carte</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-block">
+                    <h3 class="info-title">Private Events</h3>
+                    <p class="info-text">
+                        Host your special occasions in our intimate omakase area or lively back bar space.
+                    </p>
+                    <a href="mailto:ensonosato@gmail.com" class="info-link">ensonosato@gmail.com</a>
+                </div>
+
+                <div class="info-block">
+                    <h3 class="info-title">Reservations</h3>
+                    <p class="info-text">Book your experience</p>
+                    <a href="https://resy.com" target="_blank" rel="noopener" class="resy-button">Reserve on Resy</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final Footer -->
+    <footer class="final-footer">
+        <div class="final-footer-content">
+            <img src="assets/logo.png" alt="Ensō no Sato" class="footer-logo">
+            <p class="final-tagline">Omakase Precision. Izakaya Warmth.</p>
+            <p class="final-address">273 Main Street, Huntington, NY 11743</p>
+            <a href="https://www.instagram.com/ensonosato" target="_blank" rel="noopener" class="final-social">
+                @ensonosato
+            </a>
+            <p class="copyright">© 2025 Ensō no Sato. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
