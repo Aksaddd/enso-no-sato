@@ -55,8 +55,6 @@
                 </a>
             </div>
         </footer>
-
-        <!-- Scroll Indicator removed -->
     </section>
 
     <!-- Gallery Section -->
@@ -259,7 +257,9 @@
                 <div class="info-block">
                     <h3 class="info-title">Reservations</h3>
                     <p class="info-text">Book your experience</p>
-                    <a href="https://resy.com" target="_blank" rel="noopener" class="resy-button">Reserve on Resy</a>
+                    <div id="resy-button-container">
+                        <a href="https://resy.com/cities/huntington-ny/venues/enso-no-sato" id="resyButton-amJf_Xo8Us6_ZAluiTAyS" class="resy-button">Reserve on Resy</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -279,5 +279,15 @@
     </footer>
 
     <script src="script.js"></script>
+    
+    <!-- Resy Widget -->
+    <script src="https://widgets.resy.com/embed.js"></script>
+    <script>
+        resyWidget.addButton(document.getElementById('resyButton-amJf_Xo8Us6_ZAluiTAyS'), {
+            "venueId": 94802,
+            "apiKey": "2OnYHZHyPRnTyEy2troFuvpKaJpg8p6w",
+            "replace": true
+        });
+    </script>
 </body>
 </html>
