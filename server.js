@@ -398,6 +398,15 @@ app.put('/api/hours', requireAuthAPI, async (req, res) => {
 });
 
 // ============================================
+// MAIN ROUTES
+// ============================================
+
+// Serve index.html for the root path
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// ============================================
 // Initialize and Start Server
 // ============================================
 
