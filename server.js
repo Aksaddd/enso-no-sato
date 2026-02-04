@@ -10,6 +10,9 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy - required for Vercel (secure cookies behind reverse proxy)
+app.set('trust proxy', 1);
+
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/enso-no-sato';
 
@@ -185,6 +188,9 @@ app.get('/admin/login', (req, res) => {
 });
 
 app.post('/admin/login', async (req, res) => {
+    // Prevent caching - required for Set-Cookie to work on Vercel edge
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+
     try {
         const { username, password } = req.body;
         const admin = await Admin.findOne({ username });
@@ -195,7 +201,14 @@ app.post('/admin/login', async (req, res) => {
 
         if (bcrypt.compareSync(password, admin.password)) {
             req.session.isAdmin = true;
-            res.json({ success: true, redirect: '/admin' });
+            // Explicitly save session before responding (required for serverless)
+            req.session.save((err) => {
+                if (err) {
+                    console.error('Session save error:', err);
+                    return res.status(500).json({ error: 'Session error' });
+                }
+                res.json({ success: true, redirect: '/admin' });
+            });
         } else {
             res.status(401).json({ error: 'Invalid credentials' });
         }
