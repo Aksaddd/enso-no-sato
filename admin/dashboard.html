@@ -699,6 +699,20 @@
     <div class="toast-container" id="toast-container"></div>
 
     <script>
+        // Check authentication on page load
+        (async function checkAuth() {
+            try {
+                const response = await fetch('/api/auth/check');
+                if (!response.ok) {
+                    window.location.href = '/admin/login';
+                    return;
+                }
+            } catch (error) {
+                window.location.href = '/admin/login';
+                return;
+            }
+        })();
+
         // Navigation
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', () => {

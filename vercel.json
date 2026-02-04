@@ -4,16 +4,80 @@
     {
       "src": "server.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "index.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "styles.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "script.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "assets/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "admin/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/admin/login",
+      "methods": ["POST"],
+      "dest": "/server.js"
+    },
+    {
+      "src": "/admin/login\\.html",
+      "dest": "/admin/login.html"
+    },
+    {
+      "src": "/admin/login",
+      "methods": ["GET"],
+      "dest": "/server.js"
+    },
+    {
+      "src": "/admin/logout",
+      "methods": ["POST"],
+      "dest": "/server.js"
+    },
+    {
+      "src": "/admin/change-password",
+      "methods": ["POST"],
+      "dest": "/server.js"
+    },
+    {
+      "src": "/admin/dashboard\\.html",
+      "dest": "/admin/dashboard.html"
+    },
+    {
+      "src": "/admin/?$",
+      "dest": "/server.js"
+    },
     {
       "src": "/assets/(.*)",
       "dest": "/assets/$1"
     },
     {
-      "src": "/(.*)",
-      "dest": "/server.js"
+      "src": "/styles.css",
+      "dest": "/styles.css"
+    },
+    {
+      "src": "/script.js",
+      "dest": "/script.js"
+    },
+    {
+      "src": "^/$",
+      "dest": "/index.html"
     }
   ]
 }

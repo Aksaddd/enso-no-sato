@@ -180,7 +180,7 @@ app.get('/admin/login', (req, res) => {
     if (req.session && req.session.isAdmin) {
         return res.redirect('/admin');
     }
-    res.sendFile(path.join(__dirname, 'admin', 'login.html'));
+    res.redirect('/admin/login.html');
 });
 
 app.post('/admin/login', async (req, res) => {
@@ -208,8 +208,21 @@ app.post('/admin/logout', (req, res) => {
     res.json({ success: true });
 });
 
-app.get('/admin', requireAuth, (req, res) => {
-    res.sendFile(path.join(__dirname, 'admin', 'dashboard.html'));
+// Check auth status API (for dashboard to verify session)
+app.get('/api/auth/check', (req, res) => {
+    if (req.session && req.session.isAdmin) {
+        res.json({ authenticated: true });
+    } else {
+        res.status(401).json({ authenticated: false });
+    }
+});
+
+app.get('/admin', (req, res) => {
+    if (req.session && req.session.isAdmin) {
+        res.redirect('/admin/dashboard.html');
+    } else {
+        res.redirect('/admin/login');
+    }
 });
 
 app.post('/admin/change-password', requireAuthAPI, async (req, res) => {
