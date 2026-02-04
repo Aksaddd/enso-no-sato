@@ -250,6 +250,56 @@ document.getElementById('lightbox').addEventListener('click', (e) => {
         document.head.appendChild(style);
     }
 
+    // Navigation Menu
+    function initNavMenu() {
+        const menuToggle = document.getElementById('menuToggle');
+        const navMenu = document.getElementById('navMenu');
+        const navClose = document.getElementById('navClose');
+        const navOverlay = document.getElementById('navOverlay');
+        const navLinks = document.querySelectorAll('.nav-link');
+
+        if (!menuToggle || !navMenu) return;
+
+        function openMenu() {
+            menuToggle.classList.add('active');
+            navMenu.classList.add('active');
+            navOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMenu() {
+            menuToggle.classList.remove('active');
+            navMenu.classList.remove('active');
+            navOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        menuToggle.addEventListener('click', () => {
+            if (navMenu.classList.contains('active')) {
+                closeMenu();
+            } else {
+                openMenu();
+            }
+        });
+
+        navClose.addEventListener('click', closeMenu);
+        navOverlay.addEventListener('click', closeMenu);
+
+        // Close menu when a nav link is clicked
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                closeMenu();
+            });
+        });
+
+        // Close menu on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && navMenu.classList.contains('active')) {
+                closeMenu();
+            }
+        });
+    }
+
     // Initialize
     async function init() {
         // Load data from API (runs in parallel)
@@ -263,6 +313,7 @@ document.getElementById('lightbox').addEventListener('click', (e) => {
         initSmoothScroll();
         addVisibleStyles();
         initScrollAnimations();
+        initNavMenu();
     }
 
     if (document.readyState === 'loading') {

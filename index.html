@@ -13,6 +13,30 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Navigation Menu -->
+    <button class="menu-toggle" id="menuToggle" aria-label="Open navigation menu">
+        <span class="menu-bar"></span>
+        <span class="menu-bar"></span>
+        <span class="menu-bar"></span>
+    </button>
+
+    <nav class="nav-menu" id="navMenu">
+        <button class="nav-close" id="navClose" aria-label="Close navigation menu">&times;</button>
+        <ul class="nav-links">
+            <li><a href="#hero" class="nav-link">Home</a></li>
+            <li><a href="#gallery" class="nav-link">Gallery</a></li>
+            <li><a href="#story" class="nav-link">Our Story</a></li>
+            <li><a href="#hours" class="nav-link">Hours</a></li>
+            <li><a href="#experience" class="nav-link">Experience</a></li>
+            <li><a href="#reservations" class="nav-link">Reservations</a></li>
+            <li><a href="#contact" class="nav-link">Contact</a></li>
+        </ul>
+        <div class="nav-footer">
+            <a href="/admin" class="nav-admin-link">Admin</a>
+        </div>
+    </nav>
+    <div class="nav-overlay" id="navOverlay"></div>
+
     <!-- Video Background Container -->
     <div class="video-container">
         <video 
@@ -29,7 +53,7 @@
     </div>
 
     <!-- Hero Section -->
-    <section class="hero">
+    <section class="hero" id="hero">
         <div class="hero-content">
             <!-- Large Centered Logo -->
             <div class="logo-container">
@@ -58,7 +82,7 @@
     </section>
 
     <!-- Gallery Section -->
-    <section class="gallery-section">
+    <section class="gallery-section" id="gallery">
         <div class="gallery-header">
             <h2 class="gallery-title">A Glimpse of What Awaits</h2>
             <p class="gallery-subtitle">Tradition reimagined, one course at a time</p>
@@ -197,7 +221,7 @@
     <!-- Info Section -->
     <section class="info-section">
         <div class="info-container">
-            <div class="info-block story-block">
+            <div class="info-block story-block" id="story">
                 <h3 class="info-title">Our Story</h3>
                 <p class="info-text">
                     Ensō no Sato is a modern Japanese dining sanctuary where the precision of omakase 
@@ -212,7 +236,7 @@
             </div>
 
             <div class="info-grid">
-                <div class="info-block">
+                <div class="info-block" id="hours">
                     <h3 class="info-title">Hours</h3>
                     <div class="hours-content">
                         <div class="hours-item">
@@ -228,7 +252,7 @@
                     </div>
                 </div>
 
-                <div class="info-block">
+                <div class="info-block" id="experience">
                     <h3 class="info-title">Experience</h3>
                     <div class="experience-list">
                         <div class="experience-item">
@@ -246,7 +270,7 @@
                     </div>
                 </div>
 
-                <div class="info-block">
+                <div class="info-block" id="contact">
                     <h3 class="info-title">Private Events</h3>
                     <p class="info-text">
                         Host your special occasions in our intimate omakase area or lively back bar space.
@@ -254,7 +278,7 @@
                     <a href="mailto:ensonosato@gmail.com" class="info-link">ensonosato@gmail.com</a>
                 </div>
 
-                <div class="info-block">
+                <div class="info-block" id="reservations">
                     <h3 class="info-title">Reservations</h3>
                     <p class="info-text">Book your experience</p>
                     <div id="resy-button-container">
