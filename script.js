@@ -2,8 +2,11 @@
    ENSŌ NO SATO - Script
    ============================================ */
 
-// Gallery data with haikus
-const galleryData = [
+// Gallery data - will be loaded from API
+let galleryData = [];
+
+// Fallback gallery data (used if API is not available)
+const fallbackGalleryData = [
     {
         src: 'assets/gallery/dish-1.jpg',
         haiku: 'Pearls from the deep sea\nAmber jewels catch the light\nOcean\'s gift, unveiled'
@@ -37,6 +40,70 @@ const galleryData = [
         haiku: 'Moss beneath crystal\nAmber glows like trapped sunlight\nForest spirits wake'
     }
 ];
+
+// Load gallery data from API
+async function loadGalleryData() {
+    try {
+        const response = await fetch('/api/gallery');
+        const data = await response.json();
+        if (data.items && data.items.length > 0) {
+            // Filter to only active items
+            galleryData = data.items.filter(item => item.active !== false);
+        } else {
+            galleryData = fallbackGalleryData;
+        }
+    } catch (error) {
+        // Use fallback data if API is not available
+        galleryData = fallbackGalleryData;
+    }
+}
+
+// Load menu data from API and update the DOM
+async function loadMenuData() {
+    try {
+        const response = await fetch('/api/menu');
+        const data = await response.json();
+        if (data.experiences && data.experiences.length > 0) {
+            const activeItems = data.experiences.filter(item => item.active !== false);
+            const container = document.querySelector('.experience-list');
+            if (container && activeItems.length > 0) {
+                container.innerHTML = activeItems.map(item => `
+                    <div class="experience-item">
+                        <span class="experience-label">${item.label}</span>
+                        <span class="experience-price">${item.price}</span>
+                    </div>
+                `).join('');
+            }
+        }
+    } catch (error) {
+        // Keep existing HTML if API is not available
+    }
+}
+
+// Load hours data from API and update the DOM
+async function loadHoursData() {
+    try {
+        const response = await fetch('/api/hours');
+        const data = await response.json();
+        const container = document.querySelector('.hours-content');
+        if (container && data.izakaya && data.omakase) {
+            container.innerHTML = `
+                <div class="hours-item">
+                    <h4>${data.izakaya.title}</h4>
+                    <p>${data.izakaya.hours}</p>
+                </div>
+                <div class="hours-item">
+                    <h4>${data.omakase.title}</h4>
+                    <p>${data.omakase.lunch}</p>
+                    <p>${data.omakase.dinner}</p>
+                    <p>${data.omakase.seatings}</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        // Keep existing HTML if API is not available
+    }
+}
 
 let currentImageIndex = 0;
 
@@ -184,7 +251,14 @@ document.getElementById('lightbox').addEventListener('click', (e) => {
     }
 
     // Initialize
-    function init() {
+    async function init() {
+        // Load data from API (runs in parallel)
+        await Promise.all([
+            loadGalleryData(),
+            loadMenuData(),
+            loadHoursData()
+        ]);
+
         initVideo();
         initSmoothScroll();
         addVisibleStyles();

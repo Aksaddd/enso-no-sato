@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Ensō no Sato</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #0d0d0d;
+            font-family: 'Cormorant Garamond', serif;
+            color: #fff;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(26, 26, 26, 0.95);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 300;
+            color: #d4af37;
+            letter-spacing: 0.2em;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .header-actions a,
+        .header-actions button {
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: 1px solid rgba(212, 175, 55, 0.5);
+            color: #d4af37;
+            font-family: inherit;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .header-actions a:hover,
+        .header-actions button:hover {
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            min-height: calc(100vh - 60px);
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 250px;
+            background: rgba(26, 26, 26, 0.95);
+            border-right: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 1.5rem 0;
+        }
+
+        .nav-item {
+            display: block;
+            padding: 1rem 1.5rem;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(212, 175, 55, 0.1);
+            color: #fff;
+        }
+
+        .nav-item.active {
+            background: rgba(212, 175, 55, 0.15);
+            color: #d4af37;
+            border-left-color: #d4af37;
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .section-header h2 {
+            font-size: 1.8rem;
+            font-weight: 400;
+            color: #d4af37;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #d4af37 0%, #b8942d 100%);
+            border: none;
+            border-radius: 4px;
+            color: #0d0d0d;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(212, 175, 55, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid rgba(212, 175, 55, 0.5);
+            color: #d4af37;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(212, 175, 55, 0.1);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-danger {
+            background: rgba(220, 53, 69, 0.8);
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #dc3545;
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        /* Cards */
+        .card {
+            background: rgba(26, 26, 26, 0.8);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: rgba(212, 175, 55, 0.9);
+            font-size: 0.9rem;
+            letter-spacing: 0.05em;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 4px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #d4af37;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        /* Toggle Switch */
+        .toggle-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .toggle {
+            position: relative;
+            width: 50px;
+            height: 26px;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.2);
+            transition: 0.3s;
+            border-radius: 26px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background: #fff;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        .toggle input:checked + .toggle-slider {
+            background: #d4af37;
+        }
+
+        .toggle input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        /* Gallery Grid */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .gallery-card {
+            background: rgba(26, 26, 26, 0.8);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .gallery-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .gallery-card-content {
+            padding: 1rem;
+        }
+
+        .gallery-card-haiku {
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            white-space: pre-line;
+        }
+
+        .gallery-card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: rgba(212, 175, 55, 0.7);
+        }
+
+        .category-badge {
+            padding: 0.25rem 0.75rem;
+            background: rgba(212, 175, 55, 0.2);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #1a1a1a;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 8px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 1.3rem;
+            font-weight: 400;
+            color: #d4af37;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            line-height: 1;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid rgba(212, 175, 55, 0.2);
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        /* Image Upload */
+        .image-upload {
+            border: 2px dashed rgba(212, 175, 55, 0.3);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .image-upload:hover {
+            border-color: #d4af37;
+            background: rgba(212, 175, 55, 0.05);
+        }
+
+        .image-upload input {
+            display: none;
+        }
+
+        .image-upload img {
+            max-width: 100%;
+            max-height: 200px;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 2000;
+        }
+
+        .toast {
+            background: rgba(26, 26, 26, 0.95);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            margin-top: 0.5rem;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.success {
+            border-color: #28a745;
+        }
+
+        .toast.error {
+            border-color: #dc3545;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                display: flex;
+                overflow-x: auto;
+                padding: 0;
+            }
+
+            .nav-item {
+                white-space: nowrap;
+                border-left: none;
+                border-bottom: 3px solid transparent;
+            }
+
+            .nav-item.active {
+                border-left: none;
+                border-bottom-color: #d4af37;
+            }
+
+            .content {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>ENSŌ NO SATO</h1>
+        <div class="header-actions">
+            <a href="/" target="_blank">View Site</a>
+            <button onclick="showPasswordModal()">Change Password</button>
+            <button onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <nav class="sidebar">
+            <a class="nav-item active" data-section="menu">Menu & Pricing</a>
+            <a class="nav-item" data-section="gallery">Gallery</a>
+            <a class="nav-item" data-section="hours">Hours</a>
+        </nav>
+
+        <main class="content">
+            <!-- Menu Section -->
+            <section class="section active" id="menu-section">
+                <div class="section-header">
+                    <h2>Menu & Pricing</h2>
+                    <button class="btn" onclick="showMenuModal()">Add Menu Item</button>
+                </div>
+                <div id="menu-list"></div>
+            </section>
+
+            <!-- Gallery Section -->
+            <section class="section" id="gallery-section">
+                <div class="section-header">
+                    <h2>Gallery</h2>
+                    <button class="btn" onclick="showGalleryModal()">Add Gallery Item</button>
+                </div>
+                <div class="gallery-grid" id="gallery-list"></div>
+            </section>
+
+            <!-- Hours Section -->
+            <section class="section" id="hours-section">
+                <div class="section-header">
+                    <h2>Hours</h2>
+                </div>
+                <div class="card">
+                    <form id="hours-form">
+                        <h3 style="color: #d4af37; margin-bottom: 1rem;">Izakaya Bar</h3>
+                        <div class="form-group">
+                            <label>Title</label>
+                            <input type="text" id="izakaya-title" value="Izakaya Bar">
+                        </div>
+                        <div class="form-group">
+                            <label>Hours</label>
+                            <input type="text" id="izakaya-hours" placeholder="e.g., Daily: Noon – 9:30pm">
+                        </div>
+
+                        <h3 style="color: #d4af37; margin: 2rem 0 1rem;">Omakase</h3>
+                        <div class="form-group">
+                            <label>Title</label>
+                            <input type="text" id="omakase-title" value="Omakase">
+                        </div>
+                        <div class="form-group">
+                            <label>Lunch Hours</label>
+                            <input type="text" id="omakase-lunch" placeholder="e.g., Wed – Sun Lunch: 2pm – 4pm">
+                        </div>
+                        <div class="form-group">
+                            <label>Dinner Label</label>
+                            <input type="text" id="omakase-dinner" placeholder="e.g., Daily Dinner Seatings:">
+                        </div>
+                        <div class="form-group">
+                            <label>Dinner Seatings</label>
+                            <input type="text" id="omakase-seatings" placeholder="e.g., 5:30pm · 7:00pm · 8:00pm">
+                        </div>
+
+                        <button type="submit" class="btn">Save Hours</button>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Menu Modal -->
+    <div class="modal-overlay" id="menu-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="menu-modal-title">Add Menu Item</h3>
+                <button class="modal-close" onclick="closeModal('menu-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="menu-form">
+                    <input type="hidden" id="menu-id">
+                    <div class="form-group">
+                        <label>Item Name</label>
+                        <input type="text" id="menu-label" required placeholder="e.g., 18 Course Omakase">
+                    </div>
+                    <div class="form-group">
+                        <label>Price</label>
+                        <input type="text" id="menu-price" required placeholder="e.g., $135 or À la carte">
+                    </div>
+                    <div class="form-group">
+                        <div class="toggle-wrapper">
+                            <label class="toggle">
+                                <input type="checkbox" id="menu-active" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span>Active (visible on website)</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('menu-modal')">Cancel</button>
+                <button class="btn" onclick="saveMenuItem()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gallery Modal -->
+    <div class="modal-overlay" id="gallery-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="gallery-modal-title">Add Gallery Item</h3>
+                <button class="modal-close" onclick="closeModal('gallery-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="gallery-form">
+                    <input type="hidden" id="gallery-id">
+                    <div class="form-group">
+                        <label>Image</label>
+                        <div class="image-upload" onclick="document.getElementById('gallery-image').click()">
+                            <img id="gallery-image-preview" src="" style="display: none;">
+                            <p id="gallery-image-text">Click to upload image</p>
+                            <input type="file" id="gallery-image" accept="image/*" onchange="previewImage(this)">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Alt Text (for accessibility)</label>
+                        <input type="text" id="gallery-alt" placeholder="Describe the image">
+                    </div>
+                    <div class="form-group">
+                        <label>Haiku (3 lines, use Enter for line breaks)</label>
+                        <textarea id="gallery-haiku" rows="3" placeholder="Line 1&#10;Line 2&#10;Line 3"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select id="gallery-category">
+                                <option value="dish">Dish</option>
+                                <option value="drink">Drink</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <div class="toggle-wrapper" style="margin-top: 2rem;">
+                                <label class="toggle">
+                                    <input type="checkbox" id="gallery-active" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <span>Active</span>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('gallery-modal')">Cancel</button>
+                <button class="btn" onclick="saveGalleryItem()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Modal -->
+    <div class="modal-overlay" id="password-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Change Password</h3>
+                <button class="modal-close" onclick="closeModal('password-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="password-form">
+                    <div class="form-group">
+                        <label>Current Password</label>
+                        <input type="password" id="current-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label>New Password (min 8 characters)</label>
+                        <input type="password" id="new-password" required minlength="8">
+                    </div>
+                    <div class="form-group">
+                        <label>Confirm New Password</label>
+                        <input type="password" id="confirm-password" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('password-modal')">Cancel</button>
+                <button class="btn" onclick="changePassword()">Change Password</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        // Navigation
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                item.classList.add('active');
+                document.getElementById(`${item.dataset.section}-section`).classList.add('active');
+            });
+        });
+
+        // Toast notifications
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // Modal functions
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // Close modal on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+
+        // ============================================
+        // MENU FUNCTIONS
+        // ============================================
+
+        let menuData = [];
+
+        async function loadMenu() {
+            try {
+                const response = await fetch('/api/menu');
+                const data = await response.json();
+                menuData = data.experiences || [];
+                renderMenu();
+            } catch (error) {
+                showToast('Error loading menu', 'error');
+            }
+        }
+
+        function renderMenu() {
+            const container = document.getElementById('menu-list');
+            container.innerHTML = menuData.map(item => `
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <h3 style="color: ${item.active ? '#d4af37' : 'rgba(255,255,255,0.5)'}; font-weight: 400; margin-bottom: 0.5rem;">
+                                ${item.label}
+                                ${!item.active ? '<span style="font-size: 0.8rem; color: rgba(255,255,255,0.4);"> (Hidden)</span>' : ''}
+                            </h3>
+                            <p style="font-size: 1.2rem; color: #d4af37;">${item.price}</p>
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn btn-secondary btn-small" onclick="editMenuItem(${item.id})">Edit</button>
+                            <button class="btn btn-danger btn-small" onclick="deleteMenuItem(${item.id})">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showMenuModal(id = null) {
+            document.getElementById('menu-modal-title').textContent = id ? 'Edit Menu Item' : 'Add Menu Item';
+            document.getElementById('menu-id').value = id || '';
+
+            if (id) {
+                const item = menuData.find(i => i.id === id);
+                document.getElementById('menu-label').value = item.label;
+                document.getElementById('menu-price').value = item.price;
+                document.getElementById('menu-active').checked = item.active;
+            } else {
+                document.getElementById('menu-form').reset();
+                document.getElementById('menu-active').checked = true;
+            }
+
+            openModal('menu-modal');
+        }
+
+        function editMenuItem(id) {
+            showMenuModal(id);
+        }
+
+        async function saveMenuItem() {
+            const id = document.getElementById('menu-id').value;
+            const data = {
+                label: document.getElementById('menu-label').value,
+                price: document.getElementById('menu-price').value,
+                active: document.getElementById('menu-active').checked
+            };
+
+            try {
+                const url = id ? `/api/menu/${id}` : '/api/menu';
+                const method = id ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    showToast(id ? 'Menu item updated' : 'Menu item added');
+                    closeModal('menu-modal');
+                    loadMenu();
+                } else {
+                    const err = await response.json();
+                    showToast(err.error || 'Error saving menu item', 'error');
+                }
+            } catch (error) {
+                showToast('Error saving menu item', 'error');
+            }
+        }
+
+        async function deleteMenuItem(id) {
+            if (!confirm('Are you sure you want to delete this menu item?')) return;
+
+            try {
+                const response = await fetch(`/api/menu/${id}`, { method: 'DELETE' });
+                if (response.ok) {
+                    showToast('Menu item deleted');
+                    loadMenu();
+                } else {
+                    showToast('Error deleting menu item', 'error');
+                }
+            } catch (error) {
+                showToast('Error deleting menu item', 'error');
+            }
+        }
+
+        // ============================================
+        // GALLERY FUNCTIONS
+        // ============================================
+
+        let galleryData = [];
+
+        async function loadGallery() {
+            try {
+                const response = await fetch('/api/gallery');
+                const data = await response.json();
+                galleryData = data.items || [];
+                renderGallery();
+            } catch (error) {
+                showToast('Error loading gallery', 'error');
+            }
+        }
+
+        function renderGallery() {
+            const container = document.getElementById('gallery-list');
+            container.innerHTML = galleryData.map(item => `
+                <div class="gallery-card" style="opacity: ${item.active ? '1' : '0.5'};">
+                    <img src="/${item.src}" alt="${item.alt}">
+                    <div class="gallery-card-content">
+                        <p class="gallery-card-haiku">${item.haiku}</p>
+                        <div class="gallery-card-meta">
+                            <span class="category-badge">${item.category}</span>
+                            <span>${item.active ? 'Active' : 'Hidden'}</span>
+                        </div>
+                        <div class="card-actions" style="margin-top: 1rem;">
+                            <button class="btn btn-secondary btn-small" onclick="editGalleryItem(${item.id})">Edit</button>
+                            <button class="btn btn-danger btn-small" onclick="deleteGalleryItem(${item.id})">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function previewImage(input) {
+            const preview = document.getElementById('gallery-image-preview');
+            const text = document.getElementById('gallery-image-text');
+
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    text.style.display = 'none';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function showGalleryModal(id = null) {
+            document.getElementById('gallery-modal-title').textContent = id ? 'Edit Gallery Item' : 'Add Gallery Item';
+            document.getElementById('gallery-id').value = id || '';
+
+            const preview = document.getElementById('gallery-image-preview');
+            const text = document.getElementById('gallery-image-text');
+
+            if (id) {
+                const item = galleryData.find(i => i.id === id);
+                preview.src = '/' + item.src;
+                preview.style.display = 'block';
+                text.style.display = 'none';
+                document.getElementById('gallery-alt').value = item.alt;
+                document.getElementById('gallery-haiku').value = item.haiku;
+                document.getElementById('gallery-category').value = item.category;
+                document.getElementById('gallery-active').checked = item.active;
+            } else {
+                document.getElementById('gallery-form').reset();
+                document.getElementById('gallery-active').checked = true;
+                preview.style.display = 'none';
+                text.style.display = 'block';
+            }
+
+            document.getElementById('gallery-image').value = '';
+            openModal('gallery-modal');
+        }
+
+        function editGalleryItem(id) {
+            showGalleryModal(id);
+        }
+
+        async function saveGalleryItem() {
+            const id = document.getElementById('gallery-id').value;
+            const imageFile = document.getElementById('gallery-image').files[0];
+
+            // If editing with a new image, upload image first
+            if (id && imageFile) {
+                const formData = new FormData();
+                formData.append('image', imageFile);
+
+                try {
+                    const response = await fetch(`/api/gallery/${id}/image`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        showToast('Error uploading image', 'error');
+                        return;
+                    }
+                } catch (error) {
+                    showToast('Error uploading image', 'error');
+                    return;
+                }
+            }
+
+            // Save other data
+            const data = {
+                alt: document.getElementById('gallery-alt').value,
+                haiku: document.getElementById('gallery-haiku').value,
+                category: document.getElementById('gallery-category').value,
+                active: document.getElementById('gallery-active').checked
+            };
+
+            try {
+                if (id) {
+                    // Update existing
+                    const response = await fetch(`/api/gallery/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (response.ok) {
+                        showToast('Gallery item updated');
+                        closeModal('gallery-modal');
+                        loadGallery();
+                    } else {
+                        showToast('Error updating gallery item', 'error');
+                    }
+                } else {
+                    // Create new with image
+                    if (!imageFile) {
+                        showToast('Please select an image', 'error');
+                        return;
+                    }
+
+                    const formData = new FormData();
+                    formData.append('image', imageFile);
+                    formData.append('alt', data.alt);
+                    formData.append('haiku', data.haiku);
+                    formData.append('category', data.category);
+
+                    const response = await fetch('/api/gallery', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        showToast('Gallery item added');
+                        closeModal('gallery-modal');
+                        loadGallery();
+                    } else {
+                        showToast('Error adding gallery item', 'error');
+                    }
+                }
+            } catch (error) {
+                showToast('Error saving gallery item', 'error');
+            }
+        }
+
+        async function deleteGalleryItem(id) {
+            if (!confirm('Are you sure you want to delete this gallery item?')) return;
+
+            try {
+                const response = await fetch(`/api/gallery/${id}`, { method: 'DELETE' });
+                if (response.ok) {
+                    showToast('Gallery item deleted');
+                    loadGallery();
+                } else {
+                    showToast('Error deleting gallery item', 'error');
+                }
+            } catch (error) {
+                showToast('Error deleting gallery item', 'error');
+            }
+        }
+
+        // ============================================
+        // HOURS FUNCTIONS
+        // ============================================
+
+        async function loadHours() {
+            try {
+                const response = await fetch('/api/hours');
+                const data = await response.json();
+
+                document.getElementById('izakaya-title').value = data.izakaya?.title || '';
+                document.getElementById('izakaya-hours').value = data.izakaya?.hours || '';
+                document.getElementById('omakase-title').value = data.omakase?.title || '';
+                document.getElementById('omakase-lunch').value = data.omakase?.lunch || '';
+                document.getElementById('omakase-dinner').value = data.omakase?.dinner || '';
+                document.getElementById('omakase-seatings').value = data.omakase?.seatings || '';
+            } catch (error) {
+                showToast('Error loading hours', 'error');
+            }
+        }
+
+        document.getElementById('hours-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const data = {
+                izakaya: {
+                    title: document.getElementById('izakaya-title').value,
+                    hours: document.getElementById('izakaya-hours').value
+                },
+                omakase: {
+                    title: document.getElementById('omakase-title').value,
+                    lunch: document.getElementById('omakase-lunch').value,
+                    dinner: document.getElementById('omakase-dinner').value,
+                    seatings: document.getElementById('omakase-seatings').value
+                }
+            };
+
+            try {
+                const response = await fetch('/api/hours', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    showToast('Hours saved successfully');
+                } else {
+                    showToast('Error saving hours', 'error');
+                }
+            } catch (error) {
+                showToast('Error saving hours', 'error');
+            }
+        });
+
+        // ============================================
+        // PASSWORD & AUTH FUNCTIONS
+        // ============================================
+
+        function showPasswordModal() {
+            document.getElementById('password-form').reset();
+            openModal('password-modal');
+        }
+
+        async function changePassword() {
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+
+            if (newPassword !== confirmPassword) {
+                showToast('Passwords do not match', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/admin/change-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ currentPassword, newPassword })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showToast('Password changed successfully');
+                    closeModal('password-modal');
+                } else {
+                    showToast(data.error || 'Error changing password', 'error');
+                }
+            } catch (error) {
+                showToast('Error changing password', 'error');
+            }
+        }
+
+        async function logout() {
+            try {
+                await fetch('/admin/logout', { method: 'POST' });
+                window.location.href = '/admin/login';
+            } catch (error) {
+                window.location.href = '/admin/login';
+            }
+        }
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+
+        loadMenu();
+        loadGallery();
+        loadHours();
+    </script>
+</body>
+</html>
