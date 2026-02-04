@@ -188,6 +188,9 @@ app.get('/admin/login', (req, res) => {
 });
 
 app.post('/admin/login', async (req, res) => {
+    // Prevent caching - required for Set-Cookie to work on Vercel edge
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+
     try {
         const { username, password } = req.body;
         const admin = await Admin.findOne({ username });
