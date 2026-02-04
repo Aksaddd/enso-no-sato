@@ -987,6 +987,7 @@ body {
     width: 300px;
     max-width: 85vw;
     height: 100vh;
+    height: 100dvh; /* Dynamic viewport height for mobile Safari */
     background: rgba(13, 13, 13, 0.98);
     border-left: 1px solid rgba(212, 175, 55, 0.3);
     z-index: 1001;
@@ -995,6 +996,8 @@ body {
     transition: right 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .nav-menu.active {
@@ -1060,7 +1063,9 @@ body {
 /* Navigation Footer with Admin Link */
 .nav-footer {
     padding: 2rem;
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom, 20px));
     border-top: 1px solid rgba(212, 175, 55, 0.2);
+    margin-top: auto;
 }
 
 .nav-admin-link {
@@ -1123,5 +1128,36 @@ body {
 
     .nav-link {
         font-size: 1.2rem;
+        padding: 0.85rem 0;
+    }
+
+    .nav-links {
+        padding-top: 4rem;
+    }
+
+    .nav-footer {
+        padding-bottom: calc(2rem + env(safe-area-inset-bottom, 30px));
+    }
+}
+
+/* Extra small phones - ensure admin link is always accessible */
+@media (max-width: 480px) {
+    .nav-links {
+        padding: 4rem 1.5rem 1rem;
+    }
+
+    .nav-link {
+        font-size: 1.1rem;
+        padding: 0.75rem 0;
+    }
+
+    .nav-footer {
+        padding: 1.5rem;
+        padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 40px));
+    }
+
+    .nav-admin-link {
+        padding: 1rem 1.5rem;
+        font-size: 1rem;
     }
 }
