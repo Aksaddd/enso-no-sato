@@ -767,8 +767,8 @@
                             <p style="font-size: 1.2rem; color: #d4af37;">${item.price}</p>
                         </div>
                         <div class="card-actions">
-                            <button class="btn btn-secondary btn-small" onclick="editMenuItem(${item.id})">Edit</button>
-                            <button class="btn btn-danger btn-small" onclick="deleteMenuItem(${item.id})">Delete</button>
+                            <button class="btn btn-secondary btn-small" onclick="editMenuItem('${item._id}')">Edit</button>
+                            <button class="btn btn-danger btn-small" onclick="deleteMenuItem('${item._id}')">Delete</button>
                         </div>
                     </div>
                 </div>
@@ -780,7 +780,7 @@
             document.getElementById('menu-id').value = id || '';
 
             if (id) {
-                const item = menuData.find(i => i.id === id);
+                const item = menuData.find(i => i._id === id);
                 document.getElementById('menu-label').value = item.label;
                 document.getElementById('menu-price').value = item.price;
                 document.getElementById('menu-active').checked = item.active;
@@ -872,8 +872,8 @@
                             <span>${item.active ? 'Active' : 'Hidden'}</span>
                         </div>
                         <div class="card-actions" style="margin-top: 1rem;">
-                            <button class="btn btn-secondary btn-small" onclick="editGalleryItem(${item.id})">Edit</button>
-                            <button class="btn btn-danger btn-small" onclick="deleteGalleryItem(${item.id})">Delete</button>
+                            <button class="btn btn-secondary btn-small" onclick="editGalleryItem('${item._id}')">Edit</button>
+                            <button class="btn btn-danger btn-small" onclick="deleteGalleryItem('${item._id}')">Delete</button>
                         </div>
                     </div>
                 </div>
@@ -903,7 +903,7 @@
             const text = document.getElementById('gallery-image-text');
 
             if (id) {
-                const item = galleryData.find(i => i.id === id);
+                const item = galleryData.find(i => i._id === id);
                 preview.src = '/' + item.src;
                 preview.style.display = 'block';
                 text.style.display = 'none';

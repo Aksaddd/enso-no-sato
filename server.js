@@ -1,30 +1,84 @@
+require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
+const MongoStore = require('connect-mongo');
+const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// MongoDB Connection
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/enso-no-sato';
+
+mongoose.connect(MONGODB_URI)
+    .then(() => console.log('Connected to MongoDB'))
+    .catch(err => console.error('MongoDB connection error:', err));
+
+// Mongoose Schemas
+const adminSchema = new mongoose.Schema({
+    username: { type: String, required: true, unique: true },
+    password: { type: String, required: true }
+});
+
+const menuItemSchema = new mongoose.Schema({
+    label: { type: String, required: true },
+    price: { type: String, required: true },
+    active: { type: Boolean, default: true },
+    order: { type: Number, default: 0 }
+});
+
+const galleryItemSchema = new mongoose.Schema({
+    src: { type: String, required: true },
+    alt: { type: String, default: '' },
+    haiku: { type: String, default: '' },
+    category: { type: String, enum: ['dish', 'drink'], default: 'dish' },
+    active: { type: Boolean, default: true },
+    order: { type: Number, default: 0 }
+});
+
+const hoursSchema = new mongoose.Schema({
+    key: { type: String, required: true, unique: true },
+    izakaya: {
+        title: { type: String, default: 'Izakaya Bar' },
+        hours: { type: String, default: '' }
+    },
+    omakase: {
+        title: { type: String, default: 'Omakase' },
+        lunch: { type: String, default: '' },
+        dinner: { type: String, default: '' },
+        seatings: { type: String, default: '' }
+    }
+});
+
+const Admin = mongoose.model('Admin', adminSchema);
+const MenuItem = mongoose.model('MenuItem', menuItemSchema);
+const GalleryItem = mongoose.model('GalleryItem', galleryItemSchema);
+const Hours = mongoose.model('Hours', hoursSchema);
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
 
-// Session configuration
+// Session configuration with MongoDB store
 app.use(session({
     secret: process.env.SESSION_SECRET || 'enso-no-sato-admin-secret-key-change-in-production',
     resave: false,
     saveUninitialized: false,
+    store: MongoStore.create({
+        mongoUrl: MONGODB_URI,
+        ttl: 24 * 60 * 60 // 1 day
+    }),
     cookie: {
-        secure: false, // Set to true in production with HTTPS
+        secure: process.env.NODE_ENV === 'production',
         maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
 }));
 
-// Multer configuration for image uploads
+// Multer configuration for image uploads (stores path/URL)
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'assets/gallery/');
@@ -37,7 +91,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
     storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
         const allowedTypes = /jpeg|jpg|png|webp/;
         const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
@@ -49,86 +103,57 @@ const upload = multer({
     }
 });
 
-// Data file paths
-const DATA_DIR = path.join(__dirname, 'data');
-const ADMIN_FILE = path.join(DATA_DIR, 'admin.json');
-const MENU_FILE = path.join(DATA_DIR, 'menu.json');
-const GALLERY_FILE = path.join(DATA_DIR, 'gallery.json');
-const HOURS_FILE = path.join(DATA_DIR, 'hours.json');
+// Initialize default data
+async function initializeData() {
+    try {
+        // Create default admin if not exists
+        const adminExists = await Admin.findOne({ username: 'admin' });
+        if (!adminExists) {
+            const hashedPassword = bcrypt.hashSync('admin123', 10);
+            await Admin.create({ username: 'admin', password: hashedPassword });
+            console.log('Default admin account created. Username: admin, Password: admin123');
+            console.log('IMPORTANT: Change this password immediately after first login!');
+        }
 
-// Ensure data directory exists
-if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR);
-}
+        // Create default menu items if none exist
+        const menuCount = await MenuItem.countDocuments();
+        if (menuCount === 0) {
+            await MenuItem.insertMany([
+                { label: '18 Course Omakase', price: '$135', active: true, order: 1 },
+                { label: '12 Course Omakase', price: '$85', active: true, order: 2 },
+                { label: 'Kitchen & Bar Menu', price: 'À la carte', active: true, order: 3 }
+            ]);
+            console.log('Default menu items created');
+        }
 
-// Helper functions to read/write JSON files
-function readJSON(filepath) {
-    if (!fs.existsSync(filepath)) {
-        return null;
-    }
-    return JSON.parse(fs.readFileSync(filepath, 'utf8'));
-}
+        // Create default gallery items if none exist
+        const galleryCount = await GalleryItem.countDocuments();
+        if (galleryCount === 0) {
+            await GalleryItem.insertMany([
+                { src: 'assets/gallery/dish-1.jpg', alt: 'Oyster with caviar and ikura', haiku: "Pearls from the deep sea\nAmber jewels catch the light\nOcean's gift, unveiled", category: 'dish', active: true, order: 1 },
+                { src: 'assets/gallery/dish-2.jpg', alt: 'Artistic sashimi arrangement', haiku: "Autumn maple falls\nColors bloom upon the plate\nNature's art displayed", category: 'dish', active: true, order: 2 },
+                { src: 'assets/gallery/dish-3.jpg', alt: 'Scallop presentation on volcanic stone', haiku: "From volcanic stone\nDelicate blooms rise and sway\nEarth cradles the sea", category: 'dish', active: true, order: 3 },
+                { src: 'assets/gallery/dish-4.jpg', alt: 'Fresh fish selection', haiku: "Morning's first catch rests\nIn cedar, the sea still breathes\nFreshness, unadorned", category: 'dish', active: true, order: 4 },
+                { src: 'assets/gallery/dish-5.jpg', alt: 'Yakitori on charcoal grill', haiku: "Charcoal whispers low\nSmoke dances, flames embrace meat\nAncient fire, new life", category: 'dish', active: true, order: 5 },
+                { src: 'assets/gallery/drink-1.jpg', alt: 'Tropical cocktail', haiku: "Paper parasol\nGuards golden nectar below\nSummer in a glass", category: 'drink', active: true, order: 6 },
+                { src: 'assets/gallery/drink-2.jpg', alt: 'Matcha cocktail', haiku: "Jade light through the glass\nMint and citrus intertwine\nGarden in repose", category: 'drink', active: true, order: 7 },
+                { src: 'assets/gallery/drink-3.jpg', alt: 'Amber whisky cocktail', haiku: "Moss beneath crystal\nAmber glows like trapped sunlight\nForest spirits wake", category: 'drink', active: true, order: 8 }
+            ]);
+            console.log('Default gallery items created');
+        }
 
-function writeJSON(filepath, data) {
-    fs.writeFileSync(filepath, JSON.stringify(data, null, 2));
-}
-
-// Initialize admin account if not exists
-function initializeAdmin() {
-    if (!fs.existsSync(ADMIN_FILE)) {
-        const hashedPassword = bcrypt.hashSync('admin123', 10);
-        writeJSON(ADMIN_FILE, {
-            username: 'admin',
-            password: hashedPassword
-        });
-        console.log('Default admin account created. Username: admin, Password: admin123');
-        console.log('IMPORTANT: Change this password immediately after first login!');
-    }
-}
-
-// Initialize data files with current content
-function initializeData() {
-    // Initialize menu if not exists
-    if (!fs.existsSync(MENU_FILE)) {
-        writeJSON(MENU_FILE, {
-            experiences: [
-                { id: 1, label: '18 Course Omakase', price: '$135', active: true },
-                { id: 2, label: '12 Course Omakase', price: '$85', active: true },
-                { id: 3, label: 'Kitchen & Bar Menu', price: 'À la carte', active: true }
-            ]
-        });
-    }
-
-    // Initialize gallery if not exists
-    if (!fs.existsSync(GALLERY_FILE)) {
-        writeJSON(GALLERY_FILE, {
-            items: [
-                { id: 1, src: 'assets/gallery/dish-1.jpg', alt: 'Oyster with caviar and ikura', haiku: "Pearls from the deep sea\nAmber jewels catch the light\nOcean's gift, unveiled", category: 'dish', active: true },
-                { id: 2, src: 'assets/gallery/dish-2.jpg', alt: 'Artistic sashimi arrangement', haiku: "Autumn maple falls\nColors bloom upon the plate\nNature's art displayed", category: 'dish', active: true },
-                { id: 3, src: 'assets/gallery/dish-3.jpg', alt: 'Scallop presentation on volcanic stone', haiku: "From volcanic stone\nDelicate blooms rise and sway\nEarth cradles the sea", category: 'dish', active: true },
-                { id: 4, src: 'assets/gallery/dish-4.jpg', alt: 'Fresh fish selection', haiku: "Morning's first catch rests\nIn cedar, the sea still breathes\nFreshness, unadorned", category: 'dish', active: true },
-                { id: 5, src: 'assets/gallery/dish-5.jpg', alt: 'Yakitori on charcoal grill', haiku: "Charcoal whispers low\nSmoke dances, flames embrace meat\nAncient fire, new life", category: 'dish', active: true },
-                { id: 6, src: 'assets/gallery/drink-1.jpg', alt: 'Tropical cocktail', haiku: "Paper parasol\nGuards golden nectar below\nSummer in a glass", category: 'drink', active: true },
-                { id: 7, src: 'assets/gallery/drink-2.jpg', alt: 'Matcha cocktail', haiku: "Jade light through the glass\nMint and citrus intertwine\nGarden in repose", category: 'drink', active: true },
-                { id: 8, src: 'assets/gallery/drink-3.jpg', alt: 'Amber whisky cocktail', haiku: "Moss beneath crystal\nAmber glows like trapped sunlight\nForest spirits wake", category: 'drink', active: true }
-            ]
-        });
-    }
-
-    // Initialize hours if not exists
-    if (!fs.existsSync(HOURS_FILE)) {
-        writeJSON(HOURS_FILE, {
-            izakaya: {
-                title: 'Izakaya Bar',
-                hours: 'Daily: Noon – 9:30pm'
-            },
-            omakase: {
-                title: 'Omakase',
-                lunch: 'Wed – Sun Lunch: 2pm – 4pm',
-                dinner: 'Daily Dinner Seatings:',
-                seatings: '5:30pm · 7:00pm · 8:00pm'
-            }
-        });
+        // Create default hours if not exists
+        const hoursExists = await Hours.findOne({ key: 'main' });
+        if (!hoursExists) {
+            await Hours.create({
+                key: 'main',
+                izakaya: { title: 'Izakaya Bar', hours: 'Daily: Noon – 9:30pm' },
+                omakase: { title: 'Omakase', lunch: 'Wed – Sun Lunch: 2pm – 4pm', dinner: 'Daily Dinner Seatings:', seatings: '5:30pm · 7:00pm · 8:00pm' }
+            });
+            console.log('Default hours created');
+        }
+    } catch (error) {
+        console.error('Error initializing data:', error);
     }
 }
 
@@ -140,7 +165,6 @@ function requireAuth(req, res, next) {
     res.redirect('/admin/login');
 }
 
-// API authentication middleware
 function requireAuthAPI(req, res, next) {
     if (req.session && req.session.isAdmin) {
         return next();
@@ -152,7 +176,6 @@ function requireAuthAPI(req, res, next) {
 // ADMIN ROUTES
 // ============================================
 
-// Admin login page
 app.get('/admin/login', (req, res) => {
     if (req.session && req.session.isAdmin) {
         return res.redirect('/admin');
@@ -160,222 +183,227 @@ app.get('/admin/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'admin', 'login.html'));
 });
 
-// Admin login POST
-app.post('/admin/login', (req, res) => {
-    const { username, password } = req.body;
-    const admin = readJSON(ADMIN_FILE);
+app.post('/admin/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        const admin = await Admin.findOne({ username });
 
-    if (!admin) {
-        return res.status(500).json({ error: 'Admin configuration error' });
-    }
+        if (!admin) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
 
-    if (username === admin.username && bcrypt.compareSync(password, admin.password)) {
-        req.session.isAdmin = true;
-        res.json({ success: true, redirect: '/admin' });
-    } else {
-        res.status(401).json({ error: 'Invalid credentials' });
+        if (bcrypt.compareSync(password, admin.password)) {
+            req.session.isAdmin = true;
+            res.json({ success: true, redirect: '/admin' });
+        } else {
+            res.status(401).json({ error: 'Invalid credentials' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
     }
 });
 
-// Admin logout
 app.post('/admin/logout', (req, res) => {
     req.session.destroy();
     res.json({ success: true });
 });
 
-// Admin dashboard
 app.get('/admin', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'admin', 'dashboard.html'));
 });
 
-// Change admin password
-app.post('/admin/change-password', requireAuthAPI, (req, res) => {
-    const { currentPassword, newPassword } = req.body;
-    const admin = readJSON(ADMIN_FILE);
+app.post('/admin/change-password', requireAuthAPI, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        const admin = await Admin.findOne({ username: 'admin' });
 
-    if (!bcrypt.compareSync(currentPassword, admin.password)) {
-        return res.status(400).json({ error: 'Current password is incorrect' });
+        if (!bcrypt.compareSync(currentPassword, admin.password)) {
+            return res.status(400).json({ error: 'Current password is incorrect' });
+        }
+
+        if (newPassword.length < 8) {
+            return res.status(400).json({ error: 'New password must be at least 8 characters' });
+        }
+
+        admin.password = bcrypt.hashSync(newPassword, 10);
+        await admin.save();
+        res.json({ success: true, message: 'Password changed successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
     }
-
-    if (newPassword.length < 8) {
-        return res.status(400).json({ error: 'New password must be at least 8 characters' });
-    }
-
-    admin.password = bcrypt.hashSync(newPassword, 10);
-    writeJSON(ADMIN_FILE, admin);
-    res.json({ success: true, message: 'Password changed successfully' });
 });
 
 // ============================================
-// API ROUTES - Menu/Experiences
+// API ROUTES - Menu
 // ============================================
 
-// Get all menu items (public)
-app.get('/api/menu', (req, res) => {
-    const menu = readJSON(MENU_FILE);
-    res.json(menu || { experiences: [] });
-});
-
-// Update menu item (admin only)
-app.put('/api/menu/:id', requireAuthAPI, (req, res) => {
-    const menu = readJSON(MENU_FILE);
-    const id = parseInt(req.params.id);
-    const index = menu.experiences.findIndex(item => item.id === id);
-
-    if (index === -1) {
-        return res.status(404).json({ error: 'Menu item not found' });
+app.get('/api/menu', async (req, res) => {
+    try {
+        const items = await MenuItem.find().sort({ order: 1 });
+        res.json({ experiences: items });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
     }
-
-    menu.experiences[index] = { ...menu.experiences[index], ...req.body };
-    writeJSON(MENU_FILE, menu);
-    res.json({ success: true, item: menu.experiences[index] });
 });
 
-// Add new menu item (admin only)
-app.post('/api/menu', requireAuthAPI, (req, res) => {
-    const menu = readJSON(MENU_FILE);
-    const newId = Math.max(...menu.experiences.map(i => i.id), 0) + 1;
-    const newItem = { id: newId, ...req.body, active: true };
-    menu.experiences.push(newItem);
-    writeJSON(MENU_FILE, menu);
-    res.json({ success: true, item: newItem });
+app.put('/api/menu/:id', requireAuthAPI, async (req, res) => {
+    try {
+        const item = await MenuItem.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!item) {
+            return res.status(404).json({ error: 'Menu item not found' });
+        }
+        res.json({ success: true, item });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
 });
 
-// Delete menu item (admin only)
-app.delete('/api/menu/:id', requireAuthAPI, (req, res) => {
-    const menu = readJSON(MENU_FILE);
-    const id = parseInt(req.params.id);
-    menu.experiences = menu.experiences.filter(item => item.id !== id);
-    writeJSON(MENU_FILE, menu);
-    res.json({ success: true });
+app.post('/api/menu', requireAuthAPI, async (req, res) => {
+    try {
+        const maxOrder = await MenuItem.findOne().sort({ order: -1 });
+        const newOrder = maxOrder ? maxOrder.order + 1 : 1;
+        const item = await MenuItem.create({ ...req.body, order: newOrder });
+        res.json({ success: true, item });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.delete('/api/menu/:id', requireAuthAPI, async (req, res) => {
+    try {
+        await MenuItem.findByIdAndDelete(req.params.id);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
 });
 
 // ============================================
 // API ROUTES - Gallery
 // ============================================
 
-// Get all gallery items (public)
-app.get('/api/gallery', (req, res) => {
-    const gallery = readJSON(GALLERY_FILE);
-    res.json(gallery || { items: [] });
+app.get('/api/gallery', async (req, res) => {
+    try {
+        const items = await GalleryItem.find().sort({ order: 1 });
+        res.json({ items });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
 });
 
-// Update gallery item (admin only)
-app.put('/api/gallery/:id', requireAuthAPI, (req, res) => {
-    const gallery = readJSON(GALLERY_FILE);
-    const id = parseInt(req.params.id);
-    const index = gallery.items.findIndex(item => item.id === id);
-
-    if (index === -1) {
-        return res.status(404).json({ error: 'Gallery item not found' });
-    }
-
-    gallery.items[index] = { ...gallery.items[index], ...req.body };
-    writeJSON(GALLERY_FILE, gallery);
-    res.json({ success: true, item: gallery.items[index] });
-});
-
-// Add new gallery item with image upload (admin only)
-app.post('/api/gallery', requireAuthAPI, upload.single('image'), (req, res) => {
-    const gallery = readJSON(GALLERY_FILE);
-    const newId = Math.max(...gallery.items.map(i => i.id), 0) + 1;
-
-    const newItem = {
-        id: newId,
-        src: req.file ? `assets/gallery/${req.file.filename}` : req.body.src,
-        alt: req.body.alt || '',
-        haiku: req.body.haiku || '',
-        category: req.body.category || 'dish',
-        active: true
-    };
-
-    gallery.items.push(newItem);
-    writeJSON(GALLERY_FILE, gallery);
-    res.json({ success: true, item: newItem });
-});
-
-// Upload new image for existing gallery item (admin only)
-app.post('/api/gallery/:id/image', requireAuthAPI, upload.single('image'), (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ error: 'No image uploaded' });
-    }
-
-    const gallery = readJSON(GALLERY_FILE);
-    const id = parseInt(req.params.id);
-    const index = gallery.items.findIndex(item => item.id === id);
-
-    if (index === -1) {
-        return res.status(404).json({ error: 'Gallery item not found' });
-    }
-
-    // Optionally delete old image (if it's not one of the original images)
-    const oldSrc = gallery.items[index].src;
-    if (oldSrc && !oldSrc.includes('dish-') && !oldSrc.includes('drink-')) {
-        const oldPath = path.join(__dirname, oldSrc);
-        if (fs.existsSync(oldPath)) {
-            fs.unlinkSync(oldPath);
+app.put('/api/gallery/:id', requireAuthAPI, async (req, res) => {
+    try {
+        const item = await GalleryItem.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!item) {
+            return res.status(404).json({ error: 'Gallery item not found' });
         }
+        res.json({ success: true, item });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
     }
-
-    gallery.items[index].src = `assets/gallery/${req.file.filename}`;
-    writeJSON(GALLERY_FILE, gallery);
-    res.json({ success: true, item: gallery.items[index] });
 });
 
-// Delete gallery item (admin only)
-app.delete('/api/gallery/:id', requireAuthAPI, (req, res) => {
-    const gallery = readJSON(GALLERY_FILE);
-    const id = parseInt(req.params.id);
-    const item = gallery.items.find(i => i.id === id);
+app.post('/api/gallery', requireAuthAPI, upload.single('image'), async (req, res) => {
+    try {
+        const maxOrder = await GalleryItem.findOne().sort({ order: -1 });
+        const newOrder = maxOrder ? maxOrder.order + 1 : 1;
 
-    if (item) {
-        // Optionally delete the image file (if it's not one of the original images)
-        if (item.src && !item.src.includes('dish-') && !item.src.includes('drink-')) {
-            const imagePath = path.join(__dirname, item.src);
-            if (fs.existsSync(imagePath)) {
-                fs.unlinkSync(imagePath);
-            }
+        const itemData = {
+            src: req.file ? `assets/gallery/${req.file.filename}` : req.body.src,
+            alt: req.body.alt || '',
+            haiku: req.body.haiku || '',
+            category: req.body.category || 'dish',
+            active: true,
+            order: newOrder
+        };
+
+        const item = await GalleryItem.create(itemData);
+        res.json({ success: true, item });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.post('/api/gallery/:id/image', requireAuthAPI, upload.single('image'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No image uploaded' });
         }
-    }
 
-    gallery.items = gallery.items.filter(item => item.id !== id);
-    writeJSON(GALLERY_FILE, gallery);
-    res.json({ success: true });
+        const item = await GalleryItem.findByIdAndUpdate(
+            req.params.id,
+            { src: `assets/gallery/${req.file.filename}` },
+            { new: true }
+        );
+
+        if (!item) {
+            return res.status(404).json({ error: 'Gallery item not found' });
+        }
+
+        res.json({ success: true, item });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
 });
 
-// Reorder gallery items (admin only)
-app.post('/api/gallery/reorder', requireAuthAPI, (req, res) => {
-    const { order } = req.body; // Array of IDs in new order
-    const gallery = readJSON(GALLERY_FILE);
+app.delete('/api/gallery/:id', requireAuthAPI, async (req, res) => {
+    try {
+        await GalleryItem.findByIdAndDelete(req.params.id);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
 
-    const reordered = order.map(id => gallery.items.find(item => item.id === id)).filter(Boolean);
-    gallery.items = reordered;
-    writeJSON(GALLERY_FILE, gallery);
-    res.json({ success: true });
+app.post('/api/gallery/reorder', requireAuthAPI, async (req, res) => {
+    try {
+        const { order } = req.body;
+        for (let i = 0; i < order.length; i++) {
+            await GalleryItem.findByIdAndUpdate(order[i], { order: i + 1 });
+        }
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
 });
 
 // ============================================
 // API ROUTES - Hours
 // ============================================
 
-// Get hours (public)
-app.get('/api/hours', (req, res) => {
-    const hours = readJSON(HOURS_FILE);
-    res.json(hours || {});
+app.get('/api/hours', async (req, res) => {
+    try {
+        const hours = await Hours.findOne({ key: 'main' });
+        if (hours) {
+            res.json({ izakaya: hours.izakaya, omakase: hours.omakase });
+        } else {
+            res.json({});
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
 });
 
-// Update hours (admin only)
-app.put('/api/hours', requireAuthAPI, (req, res) => {
-    writeJSON(HOURS_FILE, req.body);
-    res.json({ success: true });
+app.put('/api/hours', requireAuthAPI, async (req, res) => {
+    try {
+        await Hours.findOneAndUpdate(
+            { key: 'main' },
+            { izakaya: req.body.izakaya, omakase: req.body.omakase },
+            { upsert: true }
+        );
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
 });
 
 // ============================================
 // Initialize and Start Server
 // ============================================
 
-initializeAdmin();
-initializeData();
+mongoose.connection.once('open', () => {
+    initializeData();
+});
 
 app.listen(PORT, () => {
     console.log(`\n====================================`);
@@ -385,3 +413,6 @@ app.listen(PORT, () => {
     console.log(`  Admin:   http://localhost:${PORT}/admin`);
     console.log(`====================================\n`);
 });
+
+// Export for Vercel
+module.exports = app;
