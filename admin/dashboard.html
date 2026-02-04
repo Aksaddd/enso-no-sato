@@ -702,7 +702,9 @@
         // Check authentication on page load
         (async function checkAuth() {
             try {
-                const response = await fetch('/api/auth/check');
+                const response = await fetch('/api/auth/check', {
+                    credentials: 'include'
+                });
                 if (!response.ok) {
                     window.location.href = '/admin/login';
                     return;
