@@ -6,6 +6,8 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const multer = require('multer');
 const path = require('path');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -82,20 +84,26 @@ app.use(session({
     }
 }));
 
-// Multer configuration for image uploads (stores path/URL)
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'assets/gallery/');
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
+// Cloudinary configuration
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// Multer configuration with Cloudinary storage
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'enso-no-sato/gallery',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+        transformation: [{ width: 1200, height: 1200, crop: 'limit', quality: 'auto' }]
     }
 });
 
 const upload = multer({
     storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 },
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
     fileFilter: (req, file, cb) => {
         const allowedTypes = /jpeg|jpg|png|webp/;
         const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
@@ -336,7 +344,7 @@ app.post('/api/gallery', requireAuthAPI, upload.single('image'), async (req, res
         const newOrder = maxOrder ? maxOrder.order + 1 : 1;
 
         const itemData = {
-            src: req.file ? `assets/gallery/${req.file.filename}` : req.body.src,
+            src: req.file ? req.file.path : req.body.src, // Cloudinary URL
             alt: req.body.alt || '',
             haiku: req.body.haiku || '',
             category: req.body.category || 'dish',
@@ -347,6 +355,7 @@ app.post('/api/gallery', requireAuthAPI, upload.single('image'), async (req, res
         const item = await GalleryItem.create(itemData);
         res.json({ success: true, item });
     } catch (error) {
+        console.error('Gallery create error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
@@ -359,7 +368,7 @@ app.post('/api/gallery/:id/image', requireAuthAPI, upload.single('image'), async
 
         const item = await GalleryItem.findByIdAndUpdate(
             req.params.id,
-            { src: `assets/gallery/${req.file.filename}` },
+            { src: req.file.path }, // Cloudinary URL
             { new: true }
         );
 
@@ -369,6 +378,7 @@ app.post('/api/gallery/:id/image', requireAuthAPI, upload.single('image'), async
 
         res.json({ success: true, item });
     } catch (error) {
+        console.error('Gallery image update error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });

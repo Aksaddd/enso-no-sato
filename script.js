@@ -41,7 +41,15 @@ const fallbackGalleryData = [
     }
 ];
 
-// Load gallery data from API
+// Helper to get correct image src (handles Cloudinary URLs and local paths)
+function getImageSrc(src) {
+    if (src.startsWith('http://') || src.startsWith('https://')) {
+        return src;
+    }
+    return src.startsWith('/') ? src : '/' + src;
+}
+
+// Load gallery data from API and render
 async function loadGalleryData() {
     try {
         const response = await fetch('/api/gallery');
@@ -56,6 +64,26 @@ async function loadGalleryData() {
         // Use fallback data if API is not available
         galleryData = fallbackGalleryData;
     }
+
+    // Render the gallery
+    renderGallery();
+}
+
+// Render gallery items dynamically
+function renderGallery() {
+    const container = document.querySelector('.gallery-container');
+    if (!container || galleryData.length === 0) return;
+
+    container.innerHTML = galleryData.map(item => `
+        <div class="gallery-item">
+            <div class="gallery-image-wrapper">
+                <img src="${getImageSrc(item.src)}" alt="${item.alt || ''}" class="gallery-image" onclick="openLightbox(this.src)">
+                <div class="gallery-haiku">
+                    <p class="haiku-text">${item.haiku ? item.haiku.replace(/\n/g, '<br>') : ''}</p>
+                </div>
+            </div>
+        </div>
+    `).join('');
 }
 
 // Load menu data from API and update the DOM
@@ -112,14 +140,18 @@ function openLightbox(src) {
     const lightbox = document.getElementById('lightbox');
     const lightboxImage = document.getElementById('lightbox-image');
     const lightboxHaiku = document.getElementById('lightbox-haiku');
-    
-    // Find the index of the clicked image
-    currentImageIndex = galleryData.findIndex(item => src.includes(item.src.split('/').pop()));
+
+    // Find the index of the clicked image (handle both local paths and Cloudinary URLs)
+    currentImageIndex = galleryData.findIndex(item => {
+        const itemSrc = getImageSrc(item.src);
+        return src === itemSrc || src.includes(item.src.split('/').pop());
+    });
     if (currentImageIndex === -1) currentImageIndex = 0;
-    
+
     // Set image and haiku
     lightboxImage.src = src;
-    lightboxHaiku.innerHTML = galleryData[currentImageIndex].haiku.replace(/\n/g, '<br>');
+    const haiku = galleryData[currentImageIndex].haiku;
+    lightboxHaiku.innerHTML = haiku ? haiku.replace(/\n/g, '<br>') : '';
     
     // Show lightbox with animation
     lightbox.style.display = 'flex';
@@ -158,9 +190,9 @@ function navigateLightbox(direction) {
     lightboxHaiku.style.opacity = '0';
     
     setTimeout(() => {
-        lightboxImage.src = galleryData[currentImageIndex].src;
-        lightboxHaiku.innerHTML = galleryData[currentImageIndex].haiku.replace(/\n/g, '<br>');
-        
+        lightboxImage.src = getImageSrc(galleryData[currentImageIndex].src);
+        lightboxHaiku.innerHTML = galleryData[currentImageIndex].haiku ? galleryData[currentImageIndex].haiku.replace(/\n/g, '<br>') : '';
+
         // Fade in
         lightboxImage.style.opacity = '1';
         lightboxHaiku.style.opacity = '1';
