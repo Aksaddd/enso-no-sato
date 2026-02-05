@@ -7,6 +7,7 @@ A luxury minimalist website for Ensō no Sato, a Japanese omakase and izakaya re
 - **Frontend:** HTML, CSS, JavaScript
 - **Backend:** Node.js, Express.js
 - **Database:** MongoDB Atlas
+- **Image Storage:** Cloudinary (cloud-based image hosting)
 - **Session Store:** connect-mongo (MongoDB-backed sessions)
 - **Deployment:** Vercel (serverless)
 - **Authentication:** bcryptjs for password hashing
@@ -70,6 +71,9 @@ enso-no-sato/
    MONGODB_URI=mongodb://localhost:27017/enso-no-sato
    SESSION_SECRET=your-secret-key-here
    NODE_ENV=development
+   CLOUDINARY_CLOUD_NAME=your-cloud-name
+   CLOUDINARY_API_KEY=your-api-key
+   CLOUDINARY_API_SECRET=your-api-secret
    ```
 
 4. **Start the server:**
@@ -98,6 +102,26 @@ Set these in Vercel Dashboard → Settings → Environment Variables:
 | `MONGODB_URI` | MongoDB Atlas connection string |
 | `SESSION_SECRET` | Random secret for session encryption |
 | `NODE_ENV` | Set to `production` |
+| `CLOUDINARY_CLOUD_NAME` | Your Cloudinary cloud name |
+| `CLOUDINARY_API_KEY` | Your Cloudinary API key |
+| `CLOUDINARY_API_SECRET` | Your Cloudinary API secret |
+
+### Cloudinary Setup (Image Storage)
+
+Cloudinary provides persistent cloud storage for gallery images uploaded via the admin panel.
+
+1. Create a free account at [Cloudinary](https://cloudinary.com)
+2. From your dashboard, get your credentials:
+   - **Cloud Name** (e.g., `dzkqzvmsx`)
+   - **API Key** (e.g., `111598958316125`)
+   - **API Secret** (e.g., `O0a78UMQrdL...`)
+3. Add these as environment variables in Vercel
+
+**Why Cloudinary?**
+- Vercel's serverless functions have an ephemeral filesystem
+- Without cloud storage, uploaded images would disappear after deployment
+- Cloudinary provides permanent storage with automatic image optimization
+- Free tier includes 25GB storage and 25GB bandwidth/month
 
 ### MongoDB Atlas Setup
 
@@ -163,6 +187,20 @@ cookie: {
     maxAge: 24 * 60 * 60 * 1000                     // 24 hours
 }
 ```
+
+### Image Upload Flow (Cloudinary)
+
+When an image is uploaded through the admin panel:
+
+1. Image is sent to the server via multipart form data
+2. Multer middleware with CloudinaryStorage processes the upload
+3. Image is uploaded directly to Cloudinary with automatic optimization:
+   - Max dimensions: 1200x1200 (preserving aspect ratio)
+   - Quality: auto (Cloudinary optimizes based on content)
+   - Formats: jpg, jpeg, png, webp supported
+4. Cloudinary returns a permanent URL (e.g., `https://res.cloudinary.com/...`)
+5. URL is stored in MongoDB
+6. Public website and admin panel display images via Cloudinary CDN
 
 ## Customization
 
