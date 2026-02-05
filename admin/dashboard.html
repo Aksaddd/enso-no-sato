@@ -876,11 +876,19 @@
             }
         }
 
+        function getImageSrc(src) {
+            // Handle both Cloudinary URLs (http/https) and local paths
+            if (src.startsWith('http://') || src.startsWith('https://')) {
+                return src;
+            }
+            return '/' + src;
+        }
+
         function renderGallery() {
             const container = document.getElementById('gallery-list');
             container.innerHTML = galleryData.map(item => `
                 <div class="gallery-card" style="opacity: ${item.active ? '1' : '0.5'};">
-                    <img src="/${item.src}" alt="${item.alt}">
+                    <img src="${getImageSrc(item.src)}" alt="${item.alt}">
                     <div class="gallery-card-content">
                         <p class="gallery-card-haiku">${item.haiku}</p>
                         <div class="gallery-card-meta">
@@ -920,7 +928,7 @@
 
             if (id) {
                 const item = galleryData.find(i => i._id === id);
-                preview.src = '/' + item.src;
+                preview.src = getImageSrc(item.src);
                 preview.style.display = 'block';
                 text.style.display = 'none';
                 document.getElementById('gallery-alt').value = item.alt;
