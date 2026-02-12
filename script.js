@@ -108,6 +108,84 @@ async function loadMenuData() {
     }
 }
 
+// Load chefs data from API and render
+async function loadChefsData() {
+    try {
+        const response = await fetch('/api/chefs');
+        const data = await response.json();
+        if (data.chefs && data.chefs.length > 0) {
+            const activeChefs = data.chefs.filter(c => c.active !== false);
+            renderChefs(activeChefs);
+        }
+    } catch (error) {
+        // Keep coming soon placeholder if API not available
+    }
+}
+
+function renderChefs(chefs) {
+    const container = document.getElementById('chefs-container');
+    if (!container || chefs.length === 0) return;
+
+    container.innerHTML = '<div class="chefs-grid">' + chefs.map(chef => `
+        <div class="chef-card">
+            <div class="chef-photo-wrapper">
+                ${chef.photo ? `<img src="${getImageSrc(chef.photo)}" alt="${chef.name}">` : ''}
+            </div>
+            <h3 class="chef-name">${chef.name}</h3>
+            ${chef.role ? `<p class="chef-role">${chef.role}</p>` : ''}
+            ${chef.bio ? `<p class="chef-bio">${chef.bio}</p>` : ''}
+        </div>
+    `).join('') + '</div>';
+}
+
+// Load experience media from API and render
+async function loadExperiencesData() {
+    try {
+        const response = await fetch('/api/experiences');
+        const data = await response.json();
+        if (data.items && data.items.length > 0) {
+            const activeItems = data.items.filter(i => i.active !== false);
+            renderExperiences(activeItems);
+        }
+    } catch (error) {
+        // Keep coming soon placeholder if API not available
+    }
+}
+
+function renderExperiences(items) {
+    const container = document.getElementById('experiences-container');
+    if (!container || items.length === 0) return;
+
+    container.innerHTML = '<div class="experiences-grid">' + items.map(item => `
+        <div class="experience-media-item">
+            ${item.type === 'video'
+                ? `<video src="${getImageSrc(item.src)}" muted loop playsinline autoplay></video>`
+                : `<img src="${getImageSrc(item.src)}" alt="${item.alt || ''}">`
+            }
+            ${item.caption ? `<div class="experience-media-caption">${item.caption}</div>` : ''}
+        </div>
+    `).join('') + '</div>';
+}
+
+// Load hero video setting from API
+async function loadHeroVideo() {
+    try {
+        const response = await fetch('/api/settings');
+        const data = await response.json();
+        if (data.heroVideoUrl) {
+            const video = document.querySelector('.bg-video source');
+            const videoEl = document.querySelector('.bg-video');
+            if (video && videoEl) {
+                video.src = data.heroVideoUrl;
+                videoEl.load();
+                videoEl.play().catch(() => {});
+            }
+        }
+    } catch (error) {
+        // Keep default video if API not available
+    }
+}
+
 // Load hours data from API and update the DOM
 async function loadHoursData() {
     try {
@@ -261,8 +339,8 @@ document.getElementById('lightbox').addEventListener('click', (e) => {
             });
         }, observerOptions);
 
-        // Observe gallery items and info blocks
-        document.querySelectorAll('.gallery-item, .info-block').forEach(el => {
+        // Observe gallery items, info blocks, chef cards, and experience items
+        document.querySelectorAll('.gallery-item, .info-block, .chef-card, .experience-media-item, .experiences-coming-soon, .chefs-coming-soon').forEach(el => {
             el.style.opacity = '0';
             el.style.transform = 'translateY(20px)';
             el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
@@ -274,7 +352,7 @@ document.getElementById('lightbox').addEventListener('click', (e) => {
     function addVisibleStyles() {
         const style = document.createElement('style');
         style.textContent = `
-            .gallery-item.visible, .info-block.visible {
+            .gallery-item.visible, .info-block.visible, .chef-card.visible, .experience-media-item.visible, .experiences-coming-soon.visible, .chefs-coming-soon.visible {
                 opacity: 1 !important;
                 transform: translateY(0) !important;
             }
@@ -338,7 +416,10 @@ document.getElementById('lightbox').addEventListener('click', (e) => {
         await Promise.all([
             loadGalleryData(),
             loadMenuData(),
-            loadHoursData()
+            loadHoursData(),
+            loadChefsData(),
+            loadExperiencesData(),
+            loadHeroVideo()
         ]);
 
         initVideo();

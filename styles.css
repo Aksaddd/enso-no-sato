@@ -1,5 +1,5 @@
 /* ============================================
-   ENSŌ NO SATO - Coming Soon Styles
+   ENSŌ NO SATO - Styles
    Luxury Minimalism / Japanese Zen Aesthetic
    ============================================ */
 
@@ -121,20 +121,6 @@ body {
     /* No filters needed - logo is already white with red stamp on transparent bg */
 }
 
-/* ============================================
-   COMING SOON
-   ============================================ */
-
-.coming-soon {
-    font-family: var(--font-display);
-    font-size: clamp(1.2rem, 3vw, 2rem);
-    font-weight: 600;
-    letter-spacing: 0.4em;
-    color: var(--color-text-primary);
-    text-transform: uppercase;
-    margin-top: var(--spacing-sm);
-    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
-}
 
 /* ============================================
    HERO FOOTER
@@ -434,12 +420,13 @@ body {
 }
 
 .info-link {
-    display: inline-block;
+    display: block;
     color: var(--color-text-secondary);
     text-decoration: none;
     border-bottom: 1px solid var(--color-text-subtle);
     transition: color var(--transition-fast), border-color var(--transition-fast);
     margin-top: var(--spacing-sm);
+    width: fit-content;
 }
 
 .info-link:hover {
@@ -465,6 +452,216 @@ body {
 .resy-button:hover {
     color: var(--color-text-primary);
     background-color: transparent;
+}
+
+/* ============================================
+   EXPERIENCES SECTION
+   ============================================ */
+
+.experiences-section {
+    position: relative;
+    background-color: var(--color-bg-deep);
+    padding: var(--spacing-xl) var(--spacing-md);
+    border-top: 1px solid var(--color-border);
+}
+
+.experiences-header {
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.experiences-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    font-weight: 300;
+    letter-spacing: 0.1em;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.experiences-subtitle {
+    font-family: var(--font-display);
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    font-weight: 300;
+    font-style: italic;
+    letter-spacing: 0.05em;
+    color: var(--color-text-subtle);
+}
+
+.experiences-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.experiences-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.experience-media-item {
+    position: relative;
+    aspect-ratio: 4/3;
+    overflow: hidden;
+    background-color: var(--color-bg-charcoal);
+    border-radius: 4px;
+}
+
+.experience-media-item img,
+.experience-media-item video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--transition-slow);
+}
+
+.experience-media-item:hover img,
+.experience-media-item:hover video {
+    transform: scale(1.05);
+}
+
+.experience-media-caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: linear-gradient(to top, rgba(10, 10, 10, 0.9) 0%, transparent 100%);
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-style: italic;
+    color: var(--color-text-secondary);
+}
+
+.experiences-coming-soon,
+.chefs-coming-soon {
+    text-align: center;
+    padding: var(--spacing-xl) var(--spacing-md);
+}
+
+.coming-soon-icon {
+    color: var(--color-accent);
+    opacity: 0.6;
+    margin-bottom: var(--spacing-md);
+}
+
+.coming-soon-text {
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 3vw, 1.8rem);
+    font-weight: 400;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.coming-soon-subtext {
+    font-family: var(--font-body);
+    font-size: clamp(0.9rem, 1.5vw, 1.1rem);
+    font-weight: 300;
+    color: var(--color-text-subtle);
+    font-style: italic;
+}
+
+/* ============================================
+   MEET THE CHEFS SECTION
+   ============================================ */
+
+.chefs-section {
+    position: relative;
+    background-color: var(--color-bg-section);
+    padding: var(--spacing-xl) var(--spacing-md);
+    border-top: 1px solid var(--color-border);
+}
+
+.chefs-header {
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.chefs-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    font-weight: 300;
+    letter-spacing: 0.1em;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.chefs-subtitle {
+    font-family: var(--font-display);
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    font-weight: 300;
+    font-style: italic;
+    letter-spacing: 0.05em;
+    color: var(--color-text-subtle);
+}
+
+.chefs-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.chefs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.chef-card {
+    text-align: center;
+    padding: var(--spacing-md);
+}
+
+.chef-photo-wrapper {
+    width: 220px;
+    height: 220px;
+    margin: 0 auto var(--spacing-md);
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid var(--color-accent);
+    background-color: var(--color-bg-charcoal);
+}
+
+.chef-photo-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--transition-slow);
+}
+
+.chef-card:hover .chef-photo-wrapper img {
+    transform: scale(1.1);
+}
+
+.chef-name {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--color-accent);
+    margin-bottom: var(--spacing-xs);
+}
+
+.chef-role {
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 300;
+    font-style: italic;
+    letter-spacing: 0.05em;
+    color: var(--color-text-subtle);
+    text-transform: uppercase;
+    margin-bottom: var(--spacing-sm);
+}
+
+.chef-bio {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 300;
+    line-height: 1.8;
+    color: var(--color-text-secondary);
+    max-width: 400px;
+    margin: 0 auto;
 }
 
 /* ============================================
@@ -503,6 +700,19 @@ body {
     font-size: 0.9rem;
     color: var(--color-text-subtle);
     margin-bottom: var(--spacing-sm);
+}
+
+.final-phone {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--color-text-subtle);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+    margin-bottom: var(--spacing-sm);
+}
+
+.final-phone:hover {
+    color: var(--color-text-primary);
 }
 
 .final-social {
@@ -708,11 +918,6 @@ body {
         width: clamp(250px, 45vw, 400px);
     }
     
-    .coming-soon {
-        font-size: clamp(1.4rem, 4vw, 2rem);
-        letter-spacing: 0.4em;
-    }
-    
     .footer-tagline {
         font-size: clamp(1.2rem, 3vw, 1.8rem);
         letter-spacing: 0.25em;
@@ -729,57 +934,64 @@ body {
         --spacing-lg: 2.5rem;
         --spacing-xl: 4rem;
     }
-    
+
     .hero {
         padding: var(--spacing-md) var(--spacing-sm);
         padding-bottom: 160px;
         min-height: 100svh;
     }
-    
+
     .logo {
         width: clamp(180px, 50vw, 280px);
     }
-    
-    .coming-soon {
-        font-size: clamp(1rem, 4vw, 1.4rem);
-        letter-spacing: 0.3em;
-        margin-top: var(--spacing-xs);
-    }
-    
+
     .footer {
         bottom: 20px;
         width: 95%;
     }
-    
+
     .gallery-container {
         grid-template-columns: 1fr;
         gap: var(--spacing-md);
     }
-    
+
     .gallery-haiku {
         transform: translateY(0);
         position: relative;
         background: var(--color-bg-charcoal);
     }
-    
+
     .gallery-title {
         font-size: clamp(1.4rem, 5vw, 2rem);
     }
-    
+
     .gallery-subtitle {
         font-size: clamp(0.9rem, 3vw, 1.1rem);
     }
-    
+
     .info-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .info-title {
         font-size: clamp(1.1rem, 4vw, 1.4rem);
     }
-    
+
     .scroll-indicator {
         display: none;
+    }
+
+    .experiences-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .chefs-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .chef-photo-wrapper {
+        width: 180px;
+        height: 180px;
     }
 }
 
@@ -798,11 +1010,6 @@ body {
     
     .logo {
         width: clamp(150px, 55vw, 200px);
-    }
-    
-    .coming-soon {
-        font-size: clamp(0.85rem, 4vw, 1.1rem);
-        letter-spacing: 0.2em;
     }
     
     .footer {
@@ -860,6 +1067,24 @@ body {
     .final-address {
         font-size: 0.8rem;
     }
+
+    .experiences-section,
+    .chefs-section {
+        padding: var(--spacing-lg) var(--spacing-sm);
+    }
+
+    .chef-photo-wrapper {
+        width: 150px;
+        height: 150px;
+    }
+
+    .chef-name {
+        font-size: 1.2rem;
+    }
+
+    .chef-bio {
+        font-size: 0.9rem;
+    }
 }
 
 /* Very small phones */
@@ -872,10 +1097,6 @@ body {
         width: 130px;
     }
     
-    .coming-soon {
-        font-size: 0.8rem;
-        letter-spacing: 0.15em;
-    }
 }
 
 /* Landscape phones */
@@ -887,11 +1108,6 @@ body {
     
     .logo {
         width: clamp(120px, 25vh, 200px);
-    }
-    
-    .coming-soon {
-        font-size: 1rem;
-        margin-top: var(--spacing-xs);
     }
     
     .footer {
