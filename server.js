@@ -58,10 +58,36 @@ const hoursSchema = new mongoose.Schema({
     }
 });
 
+const chefSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    role: { type: String, default: '' },
+    bio: { type: String, default: '' },
+    photo: { type: String, default: '' },
+    active: { type: Boolean, default: true },
+    order: { type: Number, default: 0 }
+});
+
+const siteSettingsSchema = new mongoose.Schema({
+    key: { type: String, required: true, unique: true },
+    heroVideoUrl: { type: String, default: '' }
+});
+
+const experienceMediaSchema = new mongoose.Schema({
+    src: { type: String, required: true },
+    alt: { type: String, default: '' },
+    caption: { type: String, default: '' },
+    type: { type: String, enum: ['image', 'video'], default: 'image' },
+    active: { type: Boolean, default: true },
+    order: { type: Number, default: 0 }
+});
+
 const Admin = mongoose.model('Admin', adminSchema);
 const MenuItem = mongoose.model('MenuItem', menuItemSchema);
 const GalleryItem = mongoose.model('GalleryItem', galleryItemSchema);
 const Hours = mongoose.model('Hours', hoursSchema);
+const Chef = mongoose.model('Chef', chefSchema);
+const SiteSettings = mongoose.model('SiteSettings', siteSettingsSchema);
+const ExperienceMedia = mongoose.model('ExperienceMedia', experienceMediaSchema);
 
 // Middleware
 app.use(express.json());
@@ -112,6 +138,75 @@ const upload = multer({
             return cb(null, true);
         }
         cb(new Error('Only image files (jpeg, jpg, png, webp) are allowed'));
+    }
+});
+
+// Cloudinary storage for chef photos
+const chefStorage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'enso-no-sato/chefs',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+        transformation: [{ width: 800, height: 800, crop: 'fill', gravity: 'face', quality: 'auto' }]
+    }
+});
+
+const uploadChef = multer({
+    storage: chefStorage,
+    limits: { fileSize: 10 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = /jpeg|jpg|png|webp/;
+        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = allowedTypes.test(file.mimetype);
+        if (extname && mimetype) return cb(null, true);
+        cb(new Error('Only image files (jpeg, jpg, png, webp) are allowed'));
+    }
+});
+
+// Cloudinary storage for hero video
+const videoStorage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'enso-no-sato/video',
+        resource_type: 'video',
+        allowed_formats: ['mp4', 'webm', 'mov']
+    }
+});
+
+const uploadVideo = multer({
+    storage: videoStorage,
+    limits: { fileSize: 200 * 1024 * 1024 }, // 200MB for video
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = /mp4|webm|mov|video/;
+        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = file.mimetype.startsWith('video/');
+        if (extname || mimetype) return cb(null, true);
+        cb(new Error('Only video files (mp4, webm, mov) are allowed'));
+    }
+});
+
+// Cloudinary storage for experience media
+const experienceStorage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: async (req, file) => {
+        const isVideo = file.mimetype.startsWith('video/');
+        return {
+            folder: 'enso-no-sato/experiences',
+            resource_type: isVideo ? 'video' : 'image',
+            allowed_formats: isVideo ? ['mp4', 'webm', 'mov'] : ['jpg', 'jpeg', 'png', 'webp'],
+            transformation: isVideo ? [] : [{ width: 1200, height: 900, crop: 'limit', quality: 'auto' }]
+        };
+    }
+});
+
+const uploadExperience = multer({
+    storage: experienceStorage,
+    limits: { fileSize: 200 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+        const isImage = /jpeg|jpg|png|webp/.test(file.mimetype);
+        const isVideo = file.mimetype.startsWith('video/');
+        if (isImage || isVideo) return cb(null, true);
+        cb(new Error('Only image or video files are allowed'));
     }
 });
 
@@ -426,6 +521,174 @@ app.put('/api/hours', requireAuthAPI, async (req, res) => {
         await Hours.findOneAndUpdate(
             { key: 'main' },
             { izakaya: req.body.izakaya, omakase: req.body.omakase },
+            { upsert: true }
+        );
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// ============================================
+// API ROUTES - Chefs
+// ============================================
+
+app.get('/api/chefs', async (req, res) => {
+    try {
+        const chefs = await Chef.find().sort({ order: 1 });
+        res.json({ chefs });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.post('/api/chefs', requireAuthAPI, uploadChef.single('photo'), async (req, res) => {
+    try {
+        const maxOrder = await Chef.findOne().sort({ order: -1 });
+        const newOrder = maxOrder ? maxOrder.order + 1 : 1;
+
+        const chefData = {
+            name: req.body.name,
+            role: req.body.role || '',
+            bio: req.body.bio || '',
+            photo: req.file ? req.file.path : '',
+            active: true,
+            order: newOrder
+        };
+
+        const chef = await Chef.create(chefData);
+        res.json({ success: true, chef });
+    } catch (error) {
+        console.error('Chef create error:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.put('/api/chefs/:id', requireAuthAPI, async (req, res) => {
+    try {
+        const chef = await Chef.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!chef) return res.status(404).json({ error: 'Chef not found' });
+        res.json({ success: true, chef });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.post('/api/chefs/:id/photo', requireAuthAPI, uploadChef.single('photo'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ error: 'No image uploaded' });
+        const chef = await Chef.findByIdAndUpdate(
+            req.params.id,
+            { photo: req.file.path },
+            { new: true }
+        );
+        if (!chef) return res.status(404).json({ error: 'Chef not found' });
+        res.json({ success: true, chef });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.delete('/api/chefs/:id', requireAuthAPI, async (req, res) => {
+    try {
+        await Chef.findByIdAndDelete(req.params.id);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// ============================================
+// API ROUTES - Experience Media
+// ============================================
+
+app.get('/api/experiences', async (req, res) => {
+    try {
+        const items = await ExperienceMedia.find().sort({ order: 1 });
+        res.json({ items });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.post('/api/experiences', requireAuthAPI, uploadExperience.single('media'), async (req, res) => {
+    try {
+        const maxOrder = await ExperienceMedia.findOne().sort({ order: -1 });
+        const newOrder = maxOrder ? maxOrder.order + 1 : 1;
+
+        const isVideo = req.file && req.file.mimetype && req.file.mimetype.startsWith('video/');
+        const itemData = {
+            src: req.file ? req.file.path : '',
+            alt: req.body.alt || '',
+            caption: req.body.caption || '',
+            type: isVideo ? 'video' : 'image',
+            active: true,
+            order: newOrder
+        };
+
+        const item = await ExperienceMedia.create(itemData);
+        res.json({ success: true, item });
+    } catch (error) {
+        console.error('Experience media create error:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.put('/api/experiences/:id', requireAuthAPI, async (req, res) => {
+    try {
+        const item = await ExperienceMedia.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!item) return res.status(404).json({ error: 'Experience media not found' });
+        res.json({ success: true, item });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.delete('/api/experiences/:id', requireAuthAPI, async (req, res) => {
+    try {
+        await ExperienceMedia.findByIdAndDelete(req.params.id);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// ============================================
+// API ROUTES - Site Settings (Hero Video)
+// ============================================
+
+app.get('/api/settings', async (req, res) => {
+    try {
+        const settings = await SiteSettings.findOne({ key: 'main' });
+        res.json(settings || { heroVideoUrl: '' });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.post('/api/settings/video', requireAuthAPI, uploadVideo.single('video'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ error: 'No video uploaded' });
+
+        await SiteSettings.findOneAndUpdate(
+            { key: 'main' },
+            { heroVideoUrl: req.file.path },
+            { upsert: true }
+        );
+
+        res.json({ success: true, videoUrl: req.file.path });
+    } catch (error) {
+        console.error('Video upload error:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+app.put('/api/settings/video-url', requireAuthAPI, async (req, res) => {
+    try {
+        const { videoUrl } = req.body;
+        await SiteSettings.findOneAndUpdate(
+            { key: 'main' },
+            { heroVideoUrl: videoUrl || '' },
             { upsert: true }
         );
         res.json({ success: true });
