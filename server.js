@@ -6,8 +6,20 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
+const os = require('os');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const ffmpeg = require('fluent-ffmpeg');
+const ffmpegStatic = require('ffmpeg-static');
+const ffprobeInstaller = require('@ffprobe-installer/ffprobe');
+
+// Set bundled ffmpeg/ffprobe binaries (no system install required)
+ffmpeg.setFfmpegPath(ffmpegStatic);
+ffmpeg.setFfprobePath(ffprobeInstaller.path);
+
+// In-memory job store: jobId -> { status, progress, videoUrl, error }
+const compressionJobs = new Map();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -163,27 +175,85 @@ const uploadChef = multer({
     }
 });
 
-// Cloudinary storage for hero video
-const videoStorage = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: {
-        folder: 'enso-no-sato/video',
-        resource_type: 'video',
-        allowed_formats: ['mp4', 'webm', 'mov']
+// ── Hero video: local disk + ffmpeg compression (replaces Cloudinary video) ──
+
+// Ensure uploads directory exists at startup
+const videoUploadDir = path.join(__dirname, 'uploads', 'videos');
+fs.mkdirSync(videoUploadDir, { recursive: true });
+
+// Multer: save raw upload to OS temp dir before compression
+const videoTempStorage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, os.tmpdir()),
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname).toLowerCase() || '.mp4';
+        cb(null, `enso-video-raw-${Date.now()}${ext}`);
     }
 });
 
 const uploadVideo = multer({
-    storage: videoStorage,
-    limits: { fileSize: 200 * 1024 * 1024 }, // 200MB for video
+    storage: videoTempStorage,
+    limits: { fileSize: 500 * 1024 * 1024 }, // accept up to 500MB raw
     fileFilter: (req, file, cb) => {
-        const allowedTypes = /mp4|webm|mov|video/;
-        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-        const mimetype = file.mimetype.startsWith('video/');
-        if (extname || mimetype) return cb(null, true);
-        cb(new Error('Only video files (mp4, webm, mov) are allowed'));
+        if (file.mimetype.startsWith('video/')) return cb(null, true);
+        cb(new Error('Only video files are allowed'));
     }
 });
+
+/**
+ * Compress a video to web-optimised H.264 MP4.
+ *
+ * Settings based on industry practice for background/hero loops:
+ *   • H.264 (libx264) — universal browser support
+ *   • CRF 23 — Vimeo-grade quality, visually lossless for most content
+ *   • preset slow — ~10 % better compression vs "medium" at same quality
+ *   • scale 1280:-2 — 720 p width, exact height kept even (required by libx264)
+ *   • -an — strip audio (autoplay policies require muted; no track = smaller file)
+ *   • +faststart — moves moov atom to front so playback starts before full download
+ *   • yuv420p — broadest hardware-decode compatibility (iOS, Android, smart TVs)
+ *
+ * If the first pass produces a file > 25 MB (e.g. very long footage) the function
+ * automatically re-encodes at CRF 30, then CRF 35 until the target is met.
+ */
+async function compressVideoToWeb(inputPath, outputPath, jobId) {
+    const CRF_LADDER = [23, 30, 35]; // quality steps — try best first
+
+    for (const crf of CRF_LADDER) {
+        await new Promise((resolve, reject) => {
+            ffmpeg(inputPath)
+                .videoCodec('libx264')
+                .outputOptions([
+                    `-crf ${crf}`,
+                    '-preset slow',
+                    '-vf scale=1280:-2',   // 720p, aspect-ratio safe
+                    '-an',                  // strip audio
+                    '-movflags +faststart', // web-optimised atom order
+                    '-pix_fmt yuv420p',     // universal decode support
+                ])
+                .output(outputPath)
+                .on('progress', (p) => {
+                    const job = compressionJobs.get(jobId);
+                    if (job) {
+                        compressionJobs.set(jobId, {
+                            ...job,
+                            progress: Math.min(99, Math.round(p.percent || 0)),
+                            crf,
+                        });
+                    }
+                })
+                .on('end', resolve)
+                .on('error', reject)
+                .run();
+        });
+
+        const sizeMB = fs.statSync(outputPath).size / (1024 * 1024);
+        if (sizeMB <= 25) break; // target met — stop re-encoding
+
+        // If more passes remain, delete the oversized file before retrying
+        if (crf !== CRF_LADDER[CRF_LADDER.length - 1]) {
+            fs.unlinkSync(outputPath);
+        }
+    }
+}
 
 // Cloudinary storage for experience media
 const experienceStorage = new CloudinaryStorage({
@@ -666,21 +736,52 @@ app.get('/api/settings', async (req, res) => {
     }
 });
 
-app.post('/api/settings/video', requireAuthAPI, uploadVideo.single('video'), async (req, res) => {
-    try {
-        if (!req.file) return res.status(400).json({ error: 'No video uploaded' });
+// POST /api/settings/video
+// Accepts raw video upload, starts ffmpeg compression in background,
+// returns a jobId immediately. Poll /api/settings/video/status/:jobId for progress.
+app.post('/api/settings/video', requireAuthAPI, uploadVideo.single('video'), (req, res) => {
+    if (!req.file) return res.status(400).json({ error: 'No video uploaded' });
 
-        await SiteSettings.findOneAndUpdate(
-            { key: 'main' },
-            { heroVideoUrl: req.file.path },
-            { upsert: true }
-        );
+    const jobId = `vjob-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const tempPath = req.file.path;
+    const outputFilename = `hero-${Date.now()}.mp4`;
+    const outputPath = path.join(videoUploadDir, outputFilename);
+    const videoUrl = `/uploads/videos/${outputFilename}`;
 
-        res.json({ success: true, videoUrl: req.file.path });
-    } catch (error) {
-        console.error('Video upload error:', error);
-        res.status(500).json({ error: 'Server error' });
-    }
+    compressionJobs.set(jobId, { status: 'compressing', progress: 0, crf: 23 });
+
+    // Run compression in the background — do NOT await before responding
+    (async () => {
+        try {
+            await compressVideoToWeb(tempPath, outputPath, jobId);
+
+            const sizeMB = (fs.statSync(outputPath).size / (1024 * 1024)).toFixed(1);
+
+            await SiteSettings.findOneAndUpdate(
+                { key: 'main' },
+                { heroVideoUrl: videoUrl },
+                { upsert: true }
+            );
+
+            compressionJobs.set(jobId, { status: 'done', progress: 100, videoUrl, sizeMB });
+            console.log(`Video compressed → ${outputFilename} (${sizeMB} MB)`);
+        } catch (err) {
+            console.error('Video compression error:', err);
+            compressionJobs.set(jobId, { status: 'error', error: err.message });
+        } finally {
+            // Always clean up the raw temp file
+            try { fs.unlinkSync(tempPath); } catch {}
+        }
+    })();
+
+    res.json({ success: true, jobId });
+});
+
+// GET /api/settings/video/status/:jobId — poll this for live compression progress
+app.get('/api/settings/video/status/:jobId', requireAuthAPI, (req, res) => {
+    const job = compressionJobs.get(req.params.jobId);
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+    res.json(job);
 });
 
 app.put('/api/settings/video-url', requireAuthAPI, async (req, res) => {

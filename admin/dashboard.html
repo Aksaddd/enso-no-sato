@@ -603,7 +603,13 @@
                     <h2>Hero Video</h2>
                 </div>
                 <div class="card">
-                    <p style="color: rgba(255,255,255,0.6); margin-bottom: 1.5rem;">Change the background video that plays on the landing page. Upload a new video or provide a URL to a hosted video.</p>
+                    <p style="color: rgba(255,255,255,0.6); margin-bottom: 0.5rem;">
+                        Upload any video up to 500 MB — it will be automatically compressed to web quality
+                        (720p H.264, ~2–8 MB) before going live. No Cloudinary needed.
+                    </p>
+                    <p style="color: rgba(255,255,255,0.35); font-size: 0.82rem; margin-bottom: 1.5rem;">
+                        Tip: keep loops under 60 seconds for the fastest load times.
+                    </p>
 
                     <div id="current-video-preview" style="margin-bottom: 1.5rem;">
                         <label style="display: block; margin-bottom: 0.5rem; color: rgba(212, 175, 55, 0.9); font-size: 0.9rem;">Current Video</label>
@@ -614,16 +620,30 @@
 
                     <div class="form-group">
                         <label>Upload New Video</label>
-                        <div class="image-upload" onclick="document.getElementById('hero-video-input').click()">
-                            <p id="video-upload-text">Click to upload video (MP4, WebM, MOV - max 200MB)</p>
+                        <div class="image-upload" id="video-drop-zone" onclick="document.getElementById('hero-video-input').click()">
+                            <p id="video-upload-text">Click to upload video (MP4, WebM, MOV — up to 500 MB raw)</p>
                             <input type="file" id="hero-video-input" accept="video/*" onchange="handleVideoUpload(this)">
+                        </div>
+
+                        <!-- Compression progress UI (hidden until upload starts) -->
+                        <div id="video-progress-wrapper" style="display:none; margin-top: 1rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                                <span id="video-progress-label" style="font-size: 0.85rem; color: rgba(212,175,55,0.9);">Compressing…</span>
+                                <span id="video-progress-pct" style="font-size: 0.85rem; color: rgba(255,255,255,0.6);">0%</span>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.1); border-radius: 4px; height: 6px; overflow: hidden;">
+                                <div id="video-progress-bar" style="height: 100%; width: 0%; background: rgba(212,175,55,0.85); border-radius: 4px; transition: width 0.4s ease;"></div>
+                            </div>
+                            <p style="margin-top: 0.5rem; font-size: 0.78rem; color: rgba(255,255,255,0.35);">
+                                Encoding with H.264 CRF 23 — this may take 1–3 minutes depending on source length.
+                            </p>
                         </div>
                     </div>
 
-                    <div style="text-align: center; color: rgba(255,255,255,0.4); margin: 1rem 0;">— or —</div>
+                    <div style="text-align: center; color: rgba(255,255,255,0.4); margin: 1rem 0;">— or paste an external URL —</div>
 
                     <div class="form-group">
-                        <label>Video URL (Cloudinary or external)</label>
+                        <label>Video URL (Cloudflare R2, CDN, etc.)</label>
                         <input type="text" id="hero-video-url" placeholder="https://...">
                     </div>
                     <button class="btn" onclick="saveVideoUrl()">Save Video URL</button>
@@ -1617,33 +1637,83 @@
             if (!input.files || !input.files[0]) return;
 
             const file = input.files[0];
-            document.getElementById('video-upload-text').textContent = `Uploading ${file.name}...`;
+            const RESET_TEXT = 'Click to upload video (MP4, WebM, MOV — up to 500 MB raw)';
+
+            // Show upload phase
+            document.getElementById('video-upload-text').textContent = `Uploading ${file.name}…`;
+            document.getElementById('video-drop-zone').style.pointerEvents = 'none';
+            document.getElementById('video-progress-wrapper').style.display = 'none';
 
             const formData = new FormData();
             formData.append('video', file);
 
+            let jobId;
             try {
-                const response = await fetch('/api/settings/video', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    showToast('Video uploaded successfully');
-                    document.getElementById('hero-video-url').value = data.videoUrl;
-                    const preview = document.getElementById('hero-video-preview');
-                    preview.querySelector('source').src = data.videoUrl;
-                    preview.load();
-                    document.getElementById('video-upload-text').textContent = 'Click to upload video (MP4, WebM, MOV - max 200MB)';
-                } else {
-                    showToast('Error uploading video', 'error');
-                    document.getElementById('video-upload-text').textContent = 'Click to upload video (MP4, WebM, MOV - max 200MB)';
-                }
-            } catch (error) {
-                showToast('Error uploading video', 'error');
-                document.getElementById('video-upload-text').textContent = 'Click to upload video (MP4, WebM, MOV - max 200MB)';
+                const res = await fetch('/api/settings/video', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Upload failed');
+                jobId = data.jobId;
+            } catch (err) {
+                showToast('Upload error: ' + err.message, 'error');
+                document.getElementById('video-upload-text').textContent = RESET_TEXT;
+                document.getElementById('video-drop-zone').style.pointerEvents = '';
+                return;
             }
+
+            // Show compression progress bar
+            document.getElementById('video-upload-text').textContent = 'Compressing…';
+            document.getElementById('video-progress-wrapper').style.display = 'block';
+
+            // Poll for progress every 1.5 s
+            await new Promise((resolve) => {
+                const interval = setInterval(async () => {
+                    try {
+                        const res = await fetch(`/api/settings/video/status/${jobId}`);
+                        const job = await res.json();
+
+                        const pct = job.progress || 0;
+                        document.getElementById('video-progress-bar').style.width = pct + '%';
+                        document.getElementById('video-progress-pct').textContent = pct + '%';
+
+                        if (job.status === 'done') {
+                            clearInterval(interval);
+
+                            // Final bar fill
+                            document.getElementById('video-progress-bar').style.width = '100%';
+                            document.getElementById('video-progress-pct').textContent = '100%';
+                            document.getElementById('video-progress-label').textContent =
+                                `Done — ${job.sizeMB} MB compressed file`;
+
+                            // Update URL input + live preview
+                            document.getElementById('hero-video-url').value = job.videoUrl;
+                            const preview = document.getElementById('hero-video-preview');
+                            preview.querySelector('source').src = job.videoUrl;
+                            preview.load();
+                            preview.play().catch(() => {});
+
+                            showToast(`Video compressed to ${job.sizeMB} MB and saved`);
+                            resolve();
+
+                            // Reset drop-zone after a moment
+                            setTimeout(() => {
+                                document.getElementById('video-upload-text').textContent = RESET_TEXT;
+                                document.getElementById('video-progress-wrapper').style.display = 'none';
+                                document.getElementById('video-drop-zone').style.pointerEvents = '';
+                            }, 3000);
+
+                        } else if (job.status === 'error') {
+                            clearInterval(interval);
+                            showToast('Compression error: ' + job.error, 'error');
+                            document.getElementById('video-upload-text').textContent = RESET_TEXT;
+                            document.getElementById('video-progress-wrapper').style.display = 'none';
+                            document.getElementById('video-drop-zone').style.pointerEvents = '';
+                            resolve();
+                        }
+                    } catch {
+                        // network blip — keep polling
+                    }
+                }, 1500);
+            });
         }
 
         async function saveVideoUrl() {

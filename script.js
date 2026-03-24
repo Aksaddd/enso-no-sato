@@ -172,7 +172,7 @@ async function loadHeroVideo() {
     try {
         const response = await fetch('/api/settings');
         const data = await response.json();
-        if (data.heroVideoUrl && data.heroVideoUrl.startsWith('http')) {
+        if (data.heroVideoUrl && (data.heroVideoUrl.startsWith('http') || data.heroVideoUrl.startsWith('/'))) {
             const video = document.querySelector('.bg-video source');
             const videoEl = document.querySelector('.bg-video');
             if (video && videoEl && video.src !== data.heroVideoUrl) {
