@@ -6,20 +6,20 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
-const os = require('os');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const ffmpeg = require('fluent-ffmpeg');
-const ffmpegStatic = require('ffmpeg-static');
-const ffprobeInstaller = require('@ffprobe-installer/ffprobe');
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
-// Set bundled ffmpeg/ffprobe binaries (no system install required)
-ffmpeg.setFfmpegPath(ffmpegStatic);
-ffmpeg.setFfprobePath(ffprobeInstaller.path);
-
-// In-memory job store: jobId -> { status, progress, videoUrl, error }
-const compressionJobs = new Map();
+// Cloudflare R2 client (S3-compatible, zero egress fees)
+const r2Client = new S3Client({
+    region: 'auto',
+    endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    credentials: {
+        accessKeyId: process.env.R2_ACCESS_KEY_ID,
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+    },
+});
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -175,85 +175,6 @@ const uploadChef = multer({
     }
 });
 
-// ── Hero video: local disk + ffmpeg compression (replaces Cloudinary video) ──
-
-// Ensure uploads directory exists at startup
-const videoUploadDir = path.join(__dirname, 'uploads', 'videos');
-fs.mkdirSync(videoUploadDir, { recursive: true });
-
-// Multer: save raw upload to OS temp dir before compression
-const videoTempStorage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, os.tmpdir()),
-    filename: (req, file, cb) => {
-        const ext = path.extname(file.originalname).toLowerCase() || '.mp4';
-        cb(null, `enso-video-raw-${Date.now()}${ext}`);
-    }
-});
-
-const uploadVideo = multer({
-    storage: videoTempStorage,
-    limits: { fileSize: 500 * 1024 * 1024 }, // accept up to 500MB raw
-    fileFilter: (req, file, cb) => {
-        if (file.mimetype.startsWith('video/')) return cb(null, true);
-        cb(new Error('Only video files are allowed'));
-    }
-});
-
-/**
- * Compress a video to web-optimised H.264 MP4.
- *
- * Settings based on industry practice for background/hero loops:
- *   • H.264 (libx264) — universal browser support
- *   • CRF 23 — Vimeo-grade quality, visually lossless for most content
- *   • preset slow — ~10 % better compression vs "medium" at same quality
- *   • scale 1280:-2 — 720 p width, exact height kept even (required by libx264)
- *   • -an — strip audio (autoplay policies require muted; no track = smaller file)
- *   • +faststart — moves moov atom to front so playback starts before full download
- *   • yuv420p — broadest hardware-decode compatibility (iOS, Android, smart TVs)
- *
- * If the first pass produces a file > 25 MB (e.g. very long footage) the function
- * automatically re-encodes at CRF 30, then CRF 35 until the target is met.
- */
-async function compressVideoToWeb(inputPath, outputPath, jobId) {
-    const CRF_LADDER = [23, 30, 35]; // quality steps — try best first
-
-    for (const crf of CRF_LADDER) {
-        await new Promise((resolve, reject) => {
-            ffmpeg(inputPath)
-                .videoCodec('libx264')
-                .outputOptions([
-                    `-crf ${crf}`,
-                    '-preset slow',
-                    '-vf scale=1280:-2',   // 720p, aspect-ratio safe
-                    '-an',                  // strip audio
-                    '-movflags +faststart', // web-optimised atom order
-                    '-pix_fmt yuv420p',     // universal decode support
-                ])
-                .output(outputPath)
-                .on('progress', (p) => {
-                    const job = compressionJobs.get(jobId);
-                    if (job) {
-                        compressionJobs.set(jobId, {
-                            ...job,
-                            progress: Math.min(99, Math.round(p.percent || 0)),
-                            crf,
-                        });
-                    }
-                })
-                .on('end', resolve)
-                .on('error', reject)
-                .run();
-        });
-
-        const sizeMB = fs.statSync(outputPath).size / (1024 * 1024);
-        if (sizeMB <= 25) break; // target met — stop re-encoding
-
-        // If more passes remain, delete the oversized file before retrying
-        if (crf !== CRF_LADDER[CRF_LADDER.length - 1]) {
-            fs.unlinkSync(outputPath);
-        }
-    }
-}
 
 // Cloudinary storage for experience media
 const experienceStorage = new CloudinaryStorage({
@@ -736,52 +657,51 @@ app.get('/api/settings', async (req, res) => {
     }
 });
 
-// POST /api/settings/video
-// Accepts raw video upload, starts ffmpeg compression in background,
-// returns a jobId immediately. Poll /api/settings/video/status/:jobId for progress.
-app.post('/api/settings/video', requireAuthAPI, uploadVideo.single('video'), (req, res) => {
-    if (!req.file) return res.status(400).json({ error: 'No video uploaded' });
+// GET /api/settings/video/upload-url
+// Returns a short-lived R2 presigned PUT URL so the browser can upload
+// the video file directly to Cloudflare R2 — bypassing Vercel size/timeout limits.
+app.get('/api/settings/video/upload-url', requireAuthAPI, async (req, res) => {
+    try {
+        const contentType = req.query.contentType || 'video/mp4';
+        const ext = contentType.includes('webm') ? '.webm'
+                  : contentType.includes('quicktime') ? '.mov'
+                  : '.mp4';
+        const key = `videos/hero-${Date.now()}${ext}`;
 
-    const jobId = `vjob-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const tempPath = req.file.path;
-    const outputFilename = `hero-${Date.now()}.mp4`;
-    const outputPath = path.join(videoUploadDir, outputFilename);
-    const videoUrl = `/uploads/videos/${outputFilename}`;
+        const command = new PutObjectCommand({
+            Bucket: process.env.R2_BUCKET_NAME,
+            Key: key,
+            ContentType: contentType,
+        });
 
-    compressionJobs.set(jobId, { status: 'compressing', progress: 0, crf: 23 });
+        const uploadUrl = await getSignedUrl(r2Client, command, { expiresIn: 3600 });
+        const publicUrl = `${process.env.R2_PUBLIC_URL}/${key}`;
 
-    // Run compression in the background — do NOT await before responding
-    (async () => {
-        try {
-            await compressVideoToWeb(tempPath, outputPath, jobId);
-
-            const sizeMB = (fs.statSync(outputPath).size / (1024 * 1024)).toFixed(1);
-
-            await SiteSettings.findOneAndUpdate(
-                { key: 'main' },
-                { heroVideoUrl: videoUrl },
-                { upsert: true }
-            );
-
-            compressionJobs.set(jobId, { status: 'done', progress: 100, videoUrl, sizeMB });
-            console.log(`Video compressed → ${outputFilename} (${sizeMB} MB)`);
-        } catch (err) {
-            console.error('Video compression error:', err);
-            compressionJobs.set(jobId, { status: 'error', error: err.message });
-        } finally {
-            // Always clean up the raw temp file
-            try { fs.unlinkSync(tempPath); } catch {}
-        }
-    })();
-
-    res.json({ success: true, jobId });
+        res.json({ uploadUrl, publicUrl });
+    } catch (error) {
+        console.error('R2 presigned URL error:', error);
+        res.status(500).json({ error: 'Could not generate upload URL. Check R2 environment variables.' });
+    }
 });
 
-// GET /api/settings/video/status/:jobId — poll this for live compression progress
-app.get('/api/settings/video/status/:jobId', requireAuthAPI, (req, res) => {
-    const job = compressionJobs.get(req.params.jobId);
-    if (!job) return res.status(404).json({ error: 'Job not found' });
-    res.json(job);
+// POST /api/settings/video/confirm
+// Called by the browser after a successful direct-to-R2 upload.
+// Saves the public R2 URL to MongoDB so the site uses the new video.
+app.post('/api/settings/video/confirm', requireAuthAPI, async (req, res) => {
+    try {
+        const { publicUrl } = req.body;
+        if (!publicUrl || !publicUrl.startsWith('http')) {
+            return res.status(400).json({ error: 'Invalid publicUrl' });
+        }
+        await SiteSettings.findOneAndUpdate(
+            { key: 'main' },
+            { heroVideoUrl: publicUrl },
+            { upsert: true }
+        );
+        res.json({ success: true, videoUrl: publicUrl });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
+    }
 });
 
 app.put('/api/settings/video-url', requireAuthAPI, async (req, res) => {

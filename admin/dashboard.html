@@ -604,11 +604,10 @@
                 </div>
                 <div class="card">
                     <p style="color: rgba(255,255,255,0.6); margin-bottom: 0.5rem;">
-                        Upload any video up to 500 MB — it will be automatically compressed to web quality
-                        (720p H.264, ~2–8 MB) before going live. No Cloudinary needed.
+                        Upload your video directly to Cloudflare R2 — served globally for free with no bandwidth charges.
                     </p>
                     <p style="color: rgba(255,255,255,0.35); font-size: 0.82rem; margin-bottom: 1.5rem;">
-                        Tip: keep loops under 60 seconds for the fastest load times.
+                        Compress your video first with <strong style="color:rgba(212,175,55,0.7)">HandBrake</strong> (free) using the <em>Fast 720p30</em> preset before uploading. Target under 25 MB for fastest load times.
                     </p>
 
                     <div id="current-video-preview" style="margin-bottom: 1.5rem;">
@@ -621,7 +620,7 @@
                     <div class="form-group">
                         <label>Upload New Video</label>
                         <div class="image-upload" id="video-drop-zone" onclick="document.getElementById('hero-video-input').click()">
-                            <p id="video-upload-text">Click to upload video (MP4, WebM, MOV — up to 500 MB raw)</p>
+                            <p id="video-upload-text">Click to upload video (MP4 — compress with HandBrake first, target under 25 MB)</p>
                             <input type="file" id="hero-video-input" accept="video/*" onchange="handleVideoUpload(this)">
                         </div>
 
@@ -1633,87 +1632,97 @@
             }
         }
 
+        const VIDEO_RESET_TEXT = 'Click to upload video (MP4 — compress with HandBrake first, target under 25 MB)';
+
+        function resetVideoUploadUI() {
+            document.getElementById('video-upload-text').textContent = VIDEO_RESET_TEXT;
+            document.getElementById('video-progress-wrapper').style.display = 'none';
+            document.getElementById('video-drop-zone').style.pointerEvents = '';
+            document.getElementById('hero-video-input').value = '';
+        }
+
         async function handleVideoUpload(input) {
             if (!input.files || !input.files[0]) return;
-
             const file = input.files[0];
-            const RESET_TEXT = 'Click to upload video (MP4, WebM, MOV — up to 500 MB raw)';
 
-            // Show upload phase
-            document.getElementById('video-upload-text').textContent = `Uploading ${file.name}…`;
+            // Lock the drop-zone and show progress wrapper
             document.getElementById('video-drop-zone').style.pointerEvents = 'none';
-            document.getElementById('video-progress-wrapper').style.display = 'none';
+            document.getElementById('video-upload-text').textContent = 'Preparing upload…';
+            document.getElementById('video-progress-wrapper').style.display = 'block';
+            document.getElementById('video-progress-label').textContent = 'Requesting upload slot from Cloudflare R2…';
+            document.getElementById('video-progress-bar').style.width = '0%';
+            document.getElementById('video-progress-pct').textContent = '0%';
 
-            const formData = new FormData();
-            formData.append('video', file);
-
-            let jobId;
+            // ── Step 1: Get a presigned R2 upload URL from the server ──
+            let uploadUrl, publicUrl;
             try {
-                const res = await fetch('/api/settings/video', { method: 'POST', body: formData });
+                const res = await fetch(`/api/settings/video/upload-url?contentType=${encodeURIComponent(file.type || 'video/mp4')}`);
                 const data = await res.json();
-                if (!res.ok) throw new Error(data.error || 'Upload failed');
-                jobId = data.jobId;
+                if (!res.ok) throw new Error(data.error || 'Failed to get upload URL');
+                uploadUrl = data.uploadUrl;
+                publicUrl = data.publicUrl;
             } catch (err) {
-                showToast('Upload error: ' + err.message, 'error');
-                document.getElementById('video-upload-text').textContent = RESET_TEXT;
-                document.getElementById('video-drop-zone').style.pointerEvents = '';
+                showToast('R2 error: ' + err.message, 'error');
+                resetVideoUploadUI();
                 return;
             }
 
-            // Show compression progress bar
-            document.getElementById('video-upload-text').textContent = 'Compressing…';
-            document.getElementById('video-progress-wrapper').style.display = 'block';
+            // ── Step 2: Upload the file directly to Cloudflare R2 ──
+            // XHR is used instead of fetch because it gives real upload progress events.
+            document.getElementById('video-progress-label').textContent = 'Uploading to Cloudflare R2…';
+            try {
+                await new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
 
-            // Poll for progress every 1.5 s
-            await new Promise((resolve) => {
-                const interval = setInterval(async () => {
-                    try {
-                        const res = await fetch(`/api/settings/video/status/${jobId}`);
-                        const job = await res.json();
-
-                        const pct = job.progress || 0;
-                        document.getElementById('video-progress-bar').style.width = pct + '%';
-                        document.getElementById('video-progress-pct').textContent = pct + '%';
-
-                        if (job.status === 'done') {
-                            clearInterval(interval);
-
-                            // Final bar fill
-                            document.getElementById('video-progress-bar').style.width = '100%';
-                            document.getElementById('video-progress-pct').textContent = '100%';
-                            document.getElementById('video-progress-label').textContent =
-                                `Done — ${job.sizeMB} MB compressed file`;
-
-                            // Update URL input + live preview
-                            document.getElementById('hero-video-url').value = job.videoUrl;
-                            const preview = document.getElementById('hero-video-preview');
-                            preview.querySelector('source').src = job.videoUrl;
-                            preview.load();
-                            preview.play().catch(() => {});
-
-                            showToast(`Video compressed to ${job.sizeMB} MB and saved`);
-                            resolve();
-
-                            // Reset drop-zone after a moment
-                            setTimeout(() => {
-                                document.getElementById('video-upload-text').textContent = RESET_TEXT;
-                                document.getElementById('video-progress-wrapper').style.display = 'none';
-                                document.getElementById('video-drop-zone').style.pointerEvents = '';
-                            }, 3000);
-
-                        } else if (job.status === 'error') {
-                            clearInterval(interval);
-                            showToast('Compression error: ' + job.error, 'error');
-                            document.getElementById('video-upload-text').textContent = RESET_TEXT;
-                            document.getElementById('video-progress-wrapper').style.display = 'none';
-                            document.getElementById('video-drop-zone').style.pointerEvents = '';
-                            resolve();
+                    xhr.upload.onprogress = (e) => {
+                        if (e.lengthComputable) {
+                            const pct = Math.round((e.loaded / e.total) * 100);
+                            document.getElementById('video-progress-bar').style.width = pct + '%';
+                            document.getElementById('video-progress-pct').textContent = pct + '%';
                         }
-                    } catch {
-                        // network blip — keep polling
-                    }
-                }, 1500);
-            });
+                    };
+
+                    xhr.onload = () => xhr.status === 200 ? resolve() : reject(new Error(`R2 returned ${xhr.status}`));
+                    xhr.onerror = () => reject(new Error('Network error during upload'));
+
+                    xhr.open('PUT', uploadUrl);
+                    xhr.setRequestHeader('Content-Type', file.type || 'video/mp4');
+                    xhr.send(file);
+                });
+            } catch (err) {
+                showToast('Upload failed: ' + err.message, 'error');
+                resetVideoUploadUI();
+                return;
+            }
+
+            // ── Step 3: Tell the server to save the R2 URL to MongoDB ──
+            document.getElementById('video-progress-label').textContent = 'Saving…';
+            try {
+                const res = await fetch('/api/settings/video/confirm', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ publicUrl }),
+                });
+                if (!res.ok) throw new Error('Failed to save video URL');
+            } catch (err) {
+                showToast('Save error: ' + err.message, 'error');
+                resetVideoUploadUI();
+                return;
+            }
+
+            // ── Done ──
+            document.getElementById('video-progress-bar').style.width = '100%';
+            document.getElementById('video-progress-pct').textContent = '100%';
+            document.getElementById('video-progress-label').textContent = 'Saved to Cloudflare R2 CDN';
+
+            document.getElementById('hero-video-url').value = publicUrl;
+            const preview = document.getElementById('hero-video-preview');
+            preview.querySelector('source').src = publicUrl;
+            preview.load();
+            preview.play().catch(() => {});
+
+            showToast('Video uploaded and live');
+            setTimeout(resetVideoUploadUI, 3000);
         }
 
         async function saveVideoUrl() {
