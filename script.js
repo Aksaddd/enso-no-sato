@@ -172,10 +172,10 @@ async function loadHeroVideo() {
     try {
         const response = await fetch('/api/settings');
         const data = await response.json();
-        if (data.heroVideoUrl) {
+        if (data.heroVideoUrl && (data.heroVideoUrl.startsWith('http') || data.heroVideoUrl.startsWith('/'))) {
             const video = document.querySelector('.bg-video source');
             const videoEl = document.querySelector('.bg-video');
-            if (video && videoEl) {
+            if (video && videoEl && video.src !== data.heroVideoUrl) {
                 video.src = data.heroVideoUrl;
                 videoEl.load();
                 videoEl.play().catch(() => {});
@@ -412,7 +412,14 @@ document.getElementById('lightbox').addEventListener('click', (e) => {
 
     // Initialize
     async function init() {
-        // Load data from API (runs in parallel)
+        // Start video immediately before API calls to avoid any delay
+        initVideo();
+        initSmoothScroll();
+        addVisibleStyles();
+        initScrollAnimations();
+        initNavMenu();
+
+        // Load data from API (runs in parallel, video already playing)
         await Promise.all([
             loadGalleryData(),
             loadMenuData(),
@@ -421,12 +428,6 @@ document.getElementById('lightbox').addEventListener('click', (e) => {
             loadExperiencesData(),
             loadHeroVideo()
         ]);
-
-        initVideo();
-        initSmoothScroll();
-        addVisibleStyles();
-        initScrollAnimations();
-        initNavMenu();
     }
 
     if (document.readyState === 'loading') {

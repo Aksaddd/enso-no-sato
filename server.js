@@ -8,6 +8,18 @@ const multer = require('multer');
 const path = require('path');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+
+// Cloudflare R2 client (S3-compatible, zero egress fees)
+const r2Client = new S3Client({
+    region: 'auto',
+    endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    credentials: {
+        accessKeyId: process.env.R2_ACCESS_KEY_ID,
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+    },
+});
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -163,27 +175,6 @@ const uploadChef = multer({
     }
 });
 
-// Cloudinary storage for hero video
-const videoStorage = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: {
-        folder: 'enso-no-sato/video',
-        resource_type: 'video',
-        allowed_formats: ['mp4', 'webm', 'mov']
-    }
-});
-
-const uploadVideo = multer({
-    storage: videoStorage,
-    limits: { fileSize: 200 * 1024 * 1024 }, // 200MB for video
-    fileFilter: (req, file, cb) => {
-        const allowedTypes = /mp4|webm|mov|video/;
-        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-        const mimetype = file.mimetype.startsWith('video/');
-        if (extname || mimetype) return cb(null, true);
-        cb(new Error('Only video files (mp4, webm, mov) are allowed'));
-    }
-});
 
 // Cloudinary storage for experience media
 const experienceStorage = new CloudinaryStorage({
@@ -666,19 +657,49 @@ app.get('/api/settings', async (req, res) => {
     }
 });
 
-app.post('/api/settings/video', requireAuthAPI, uploadVideo.single('video'), async (req, res) => {
+// GET /api/settings/video/upload-url
+// Returns a short-lived R2 presigned PUT URL so the browser can upload
+// the video file directly to Cloudflare R2 — bypassing Vercel size/timeout limits.
+app.get('/api/settings/video/upload-url', requireAuthAPI, async (req, res) => {
     try {
-        if (!req.file) return res.status(400).json({ error: 'No video uploaded' });
+        const contentType = req.query.contentType || 'video/mp4';
+        const ext = contentType.includes('webm') ? '.webm'
+                  : contentType.includes('quicktime') ? '.mov'
+                  : '.mp4';
+        const key = `videos/hero-${Date.now()}${ext}`;
 
+        const command = new PutObjectCommand({
+            Bucket: process.env.R2_BUCKET_NAME,
+            Key: key,
+            ContentType: contentType,
+        });
+
+        const uploadUrl = await getSignedUrl(r2Client, command, { expiresIn: 3600 });
+        const publicUrl = `${process.env.R2_PUBLIC_URL}/${key}`;
+
+        res.json({ uploadUrl, publicUrl });
+    } catch (error) {
+        console.error('R2 presigned URL error:', error);
+        res.status(500).json({ error: 'Could not generate upload URL. Check R2 environment variables.' });
+    }
+});
+
+// POST /api/settings/video/confirm
+// Called by the browser after a successful direct-to-R2 upload.
+// Saves the public R2 URL to MongoDB so the site uses the new video.
+app.post('/api/settings/video/confirm', requireAuthAPI, async (req, res) => {
+    try {
+        const { publicUrl } = req.body;
+        if (!publicUrl || !publicUrl.startsWith('http')) {
+            return res.status(400).json({ error: 'Invalid publicUrl' });
+        }
         await SiteSettings.findOneAndUpdate(
             { key: 'main' },
-            { heroVideoUrl: req.file.path },
+            { heroVideoUrl: publicUrl },
             { upsert: true }
         );
-
-        res.json({ success: true, videoUrl: req.file.path });
+        res.json({ success: true, videoUrl: publicUrl });
     } catch (error) {
-        console.error('Video upload error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
