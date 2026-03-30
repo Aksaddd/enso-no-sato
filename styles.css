@@ -254,6 +254,15 @@ body {
     color: var(--color-text-subtle);
 }
 
+.gallery-experiences-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-top: 1rem;
+    opacity: 0.75;
+}
+
 .gallery-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
