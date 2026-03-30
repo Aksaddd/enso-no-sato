@@ -6,20 +6,8 @@
 let galleryData = [];
 
 // Fallback gallery data (used if API is not available)
-const fallbackGalleryData = [
-    {
-        src: 'assets/gallery/drink-1.jpg',
-        haiku: 'Paper parasol\nGuards golden nectar below\nSummer in a glass'
-    },
-    {
-        src: 'assets/gallery/drink-2.jpg',
-        haiku: 'Jade light through the glass\nMint and citrus intertwine\nGarden in repose'
-    },
-    {
-        src: 'assets/gallery/drink-3.jpg',
-        haiku: 'Moss beneath crystal\nAmber glows like trapped sunlight\nForest spirits wake'
-    }
-];
+// Gallery data — drinks now live in their own section
+const fallbackGalleryData = [];
 
 // Helper to get correct image src (handles Cloudinary URLs and local paths)
 function getImageSrc(src) {
