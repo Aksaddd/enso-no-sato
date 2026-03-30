@@ -24,6 +24,10 @@
     {
       "src": "admin/**",
       "use": "@vercel/static"
+    },
+    {
+      "src": "tools/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
@@ -66,6 +70,10 @@
     {
       "src": "/assets/(.*)",
       "dest": "/assets/$1"
+    },
+    {
+      "src": "/tools/(.*)",
+      "dest": "/tools/$1"
     },
     {
       "src": "/styles.css",
