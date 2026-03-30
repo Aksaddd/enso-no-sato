@@ -976,8 +976,10 @@ body {
     }
 }
 
-/* Menu item images are clickable */
-.menu-image {
+/* Clickable images across the site */
+.menu-image,
+.experience-media-item img,
+.chef-photo-wrapper img {
     cursor: zoom-in;
 }
 
