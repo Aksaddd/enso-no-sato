@@ -433,7 +433,15 @@ app.put('/api/gallery/:id', requireAuthAPI, async (req, res) => {
     }
 });
 
-app.post('/api/gallery', requireAuthAPI, upload.single('image'), async (req, res) => {
+app.post('/api/gallery', requireAuthAPI, (req, res, next) => {
+    upload.single('image')(req, res, (err) => {
+        if (err) {
+            console.error('Gallery image upload error:', err);
+            return res.status(500).json({ error: err.message || 'Image upload failed' });
+        }
+        next();
+    });
+}, async (req, res) => {
     try {
         const maxOrder = await GalleryItem.findOne().sort({ order: -1 });
         const newOrder = maxOrder ? maxOrder.order + 1 : 1;
@@ -447,6 +455,10 @@ app.post('/api/gallery', requireAuthAPI, upload.single('image'), async (req, res
             order: newOrder
         };
 
+        if (!itemData.src) {
+            return res.status(400).json({ error: 'Image is required' });
+        }
+
         const item = await GalleryItem.create(itemData);
         res.json({ success: true, item });
     } catch (error) {
@@ -455,7 +467,15 @@ app.post('/api/gallery', requireAuthAPI, upload.single('image'), async (req, res
     }
 });
 
-app.post('/api/gallery/:id/image', requireAuthAPI, upload.single('image'), async (req, res) => {
+app.post('/api/gallery/:id/image', requireAuthAPI, (req, res, next) => {
+    upload.single('image')(req, res, (err) => {
+        if (err) {
+            console.error('Gallery image upload error:', err);
+            return res.status(500).json({ error: err.message || 'Image upload failed' });
+        }
+        next();
+    });
+}, async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ error: 'No image uploaded' });
