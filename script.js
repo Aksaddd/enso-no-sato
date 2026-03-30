@@ -122,15 +122,19 @@ function renderExperiences(items) {
     const container = document.getElementById('experiences-container');
     if (!container || items.length === 0) return;
 
-    container.innerHTML = '<div class="experiences-grid">' + items.map(item => `
-        <div class="experience-media-item">
-            ${item.type === 'video'
-                ? `<video src="${getImageSrc(item.src)}" muted loop playsinline autoplay></video>`
-                : `<img src="${getImageSrc(item.src)}" alt="${item.alt || ''}">`
-            }
-            ${item.caption ? `<div class="experience-media-caption">${item.caption}</div>` : ''}
-        </div>
-    `).join('') + '</div>';
+    container.innerHTML = '<div class="experiences-grid">' + items.map(item => {
+        const src = getImageSrc(item.src);
+        const alt = (item.alt || '').replace(/'/g, "\\'");
+        const caption = (item.caption || '').replace(/'/g, "\\'");
+        const media = item.type === 'video'
+            ? `<video src="${src}" muted loop playsinline autoplay></video>`
+            : `<img src="${src}" alt="${item.alt || ''}" onclick="openMenuLightbox(this.src,'${alt}','${caption}')">`;
+        return `
+            <div class="experience-media-item">
+                ${media}
+                ${item.caption ? `<div class="experience-media-caption">${item.caption}</div>` : ''}
+            </div>`;
+    }).join('') + '</div>';
 }
 
 // Hero video is hardcoded in HTML (assets/enso-koi-loop.mp4)
@@ -186,6 +190,15 @@ function closeMenuLightbox() {
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('menuLightbox').addEventListener('click', e => {
         if (e.target === e.currentTarget) closeMenuLightbox();
+    });
+
+    // Universal image zoom — any img without its own onclick, excluding logos
+    document.addEventListener('click', e => {
+        if (e.target.tagName !== 'IMG') return;
+        const img = e.target;
+        if (img.getAttribute('onclick')) return;
+        if (img.classList.contains('logo') || img.classList.contains('footer-logo')) return;
+        openMenuLightbox(img.src, img.alt || '', '');
     });
 });
 
