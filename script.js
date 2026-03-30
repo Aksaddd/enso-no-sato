@@ -8,26 +8,6 @@ let galleryData = [];
 // Fallback gallery data (used if API is not available)
 const fallbackGalleryData = [
     {
-        src: 'assets/gallery/dish-1.jpg',
-        haiku: 'Pearls from the deep sea\nAmber jewels catch the light\nOcean\'s gift, unveiled'
-    },
-    {
-        src: 'assets/gallery/dish-2.jpg',
-        haiku: 'Autumn maple falls\nColors bloom upon the plate\nNature\'s art displayed'
-    },
-    {
-        src: 'assets/gallery/dish-3.jpg',
-        haiku: 'From volcanic stone\nDelicate blooms rise and sway\nEarth cradles the sea'
-    },
-    {
-        src: 'assets/gallery/dish-4.jpg',
-        haiku: 'Morning\'s first catch rests\nIn cedar, the sea still breathes\nFreshness, unadorned'
-    },
-    {
-        src: 'assets/gallery/dish-5.jpg',
-        haiku: 'Charcoal whispers low\nSmoke dances, flames embrace meat\nAncient fire, new life'
-    },
-    {
         src: 'assets/gallery/drink-1.jpg',
         haiku: 'Paper parasol\nGuards golden nectar below\nSummer in a glass'
     },
