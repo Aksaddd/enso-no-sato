@@ -26,6 +26,7 @@
         <ul class="nav-links">
             <li><a href="#hero" class="nav-link">Home</a></li>
             <li><a href="#gallery" class="nav-link">Gallery</a></li>
+            <li><a href="#drinks" class="nav-link">The Bar</a></li>
             <li><a href="#menu" class="nav-link">Menu</a></li>
             <li><a href="#story" class="nav-link">Our Story</a></li>
             <li><a href="#hours" class="nav-link">Hours</a></li>
@@ -105,13 +106,21 @@
             </div>
         </div>
 
-        <!-- Drinks Gallery -->
-        <div class="gallery-container">
-            <div class="gallery-item">
-                <div class="gallery-image-wrapper">
-                    <img src="assets/gallery/drink-1.jpg" alt="Tropical cocktail" class="gallery-image" onclick="openLightbox(this.src)">
+    </section>
+
+    <!-- Drinks Section -->
+    <section class="drinks-section" id="drinks">
+        <div class="drinks-header">
+            <h2 class="drinks-title">The Bar</h2>
+            <p class="drinks-subtitle">Crafted with intention, poured with care</p>
+        </div>
+        <div class="drinks-grid">
+
+            <div class="drinks-item">
+                <div class="drinks-image-wrapper">
+                    <img src="assets/gallery/drink-1.jpg" alt="Tropical cocktail" class="drinks-image" onclick="openMenuLightbox(this.src,'Tropical Cocktail','Paper parasol · Golden nectar · Summer in a glass')">
                 </div>
-                <div class="gallery-haiku">
+                <div class="drinks-haiku">
                     <p class="haiku-text">
                         Paper parasol<br>
                         Guards golden nectar below<br>
@@ -120,11 +129,11 @@
                 </div>
             </div>
 
-            <div class="gallery-item">
-                <div class="gallery-image-wrapper">
-                    <img src="assets/gallery/drink-2.jpg" alt="Matcha cocktail" class="gallery-image" onclick="openLightbox(this.src)">
+            <div class="drinks-item">
+                <div class="drinks-image-wrapper">
+                    <img src="assets/gallery/drink-2.jpg" alt="Matcha cocktail" class="drinks-image" onclick="openMenuLightbox(this.src,'Matcha Cocktail','Jade light · Mint and citrus · Garden in repose')">
                 </div>
-                <div class="gallery-haiku">
+                <div class="drinks-haiku">
                     <p class="haiku-text">
                         Jade light through the glass<br>
                         Mint and citrus intertwine<br>
@@ -133,11 +142,11 @@
                 </div>
             </div>
 
-            <div class="gallery-item">
-                <div class="gallery-image-wrapper">
-                    <img src="assets/gallery/drink-3.jpg" alt="Amber whisky cocktail" class="gallery-image" onclick="openLightbox(this.src)">
+            <div class="drinks-item">
+                <div class="drinks-image-wrapper">
+                    <img src="assets/gallery/drink-3.jpg" alt="Amber whisky cocktail" class="drinks-image" onclick="openMenuLightbox(this.src,'Whisky Cocktail','Moss beneath crystal · Amber glows like trapped sunlight')">
                 </div>
-                <div class="gallery-haiku">
+                <div class="drinks-haiku">
                     <p class="haiku-text">
                         Moss beneath crystal<br>
                         Amber glows like trapped sunlight<br>
@@ -145,8 +154,8 @@
                     </p>
                 </div>
             </div>
-        </div>
 
+        </div>
     </section>
 
     <!-- Lightbox Modal -->
