@@ -49,23 +49,9 @@ function getImageSrc(src) {
     return src.startsWith('/') ? src : '/' + src;
 }
 
-// Load gallery data from API and render
+// Use hardcoded gallery data (no API call needed)
 async function loadGalleryData() {
-    try {
-        const response = await fetch('/api/gallery');
-        const data = await response.json();
-        if (data.items && data.items.length > 0) {
-            // Filter to only active items
-            galleryData = data.items.filter(item => item.active !== false);
-        } else {
-            galleryData = fallbackGalleryData;
-        }
-    } catch (error) {
-        // Use fallback data if API is not available
-        galleryData = fallbackGalleryData;
-    }
-
-    // Render the gallery
+    galleryData = fallbackGalleryData;
     renderGallery();
 }
 
@@ -167,23 +153,9 @@ function renderExperiences(items) {
     `).join('') + '</div>';
 }
 
-// Load hero video setting from API
+// Hero video is hardcoded in HTML (assets/enso-koi-loop.mp4)
 async function loadHeroVideo() {
-    try {
-        const response = await fetch('/api/settings');
-        const data = await response.json();
-        if (data.heroVideoUrl) {
-            const video = document.querySelector('.bg-video source');
-            const videoEl = document.querySelector('.bg-video');
-            if (video && videoEl) {
-                video.src = data.heroVideoUrl;
-                videoEl.load();
-                videoEl.play().catch(() => {});
-            }
-        }
-    } catch (error) {
-        // Keep default video if API not available
-    }
+    // No-op: video src is set directly in index.html
 }
 
 // Load hours data from API and update the DOM

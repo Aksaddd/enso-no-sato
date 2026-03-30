@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Compression Tool | Ensō no Sato</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-bg-deep: #0a0a0a;
+            --color-bg-charcoal: #141414;
+            --color-text-primary: #f5f2eb;
+            --color-text-secondary: #c4bfb3;
+            --color-text-subtle: #8a857a;
+            --color-accent: #c9a962;
+            --color-border: rgba(255, 255, 255, 0.1);
+            --font-display: 'Cormorant Garamond', Georgia, serif;
+        }
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { font-size: 16px; }
+
+        body {
+            font-family: var(--font-display);
+            background-color: var(--color-bg-deep);
+            color: var(--color-text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 4rem 2rem 6rem;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Header */
+        .tool-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .site-label {
+            font-size: 0.75rem;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: var(--color-text-subtle);
+            margin-bottom: 1.25rem;
+        }
+
+        .tool-title {
+            font-size: 2.8rem;
+            font-weight: 300;
+            letter-spacing: 0.08em;
+            color: var(--color-text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .tool-subtitle {
+            font-size: 1.05rem;
+            color: var(--color-text-subtle);
+            font-style: italic;
+        }
+
+        .tool-specs {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .spec-badge {
+            padding: 0.35rem 1rem;
+            border: 1px solid var(--color-border);
+            color: var(--color-text-subtle);
+            font-size: 0.8rem;
+            letter-spacing: 0.08em;
+        }
+
+        .divider {
+            width: 60px;
+            height: 1px;
+            background: var(--color-border);
+            margin: 2rem auto;
+        }
+
+        /* Upload Zone */
+        .upload-zone {
+            width: 100%;
+            max-width: 620px;
+            border: 1px solid var(--color-border);
+            padding: 3.5rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s ease, background-color 0.3s ease;
+            position: relative;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.drag-over {
+            border-color: var(--color-accent);
+            background-color: rgba(201, 169, 98, 0.03);
+        }
+
+        .upload-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+        .upload-icon {
+            width: 44px;
+            height: 44px;
+            margin: 0 auto 1.25rem;
+            opacity: 0.4;
+        }
+
+        .upload-label {
+            font-size: 1.15rem;
+            color: var(--color-text-secondary);
+            display: block;
+            margin-bottom: 0.4rem;
+        }
+
+        .upload-hint {
+            font-size: 0.85rem;
+            color: var(--color-text-subtle);
+        }
+
+        /* Controls */
+        .controls {
+            width: 100%;
+            max-width: 620px;
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .control-row {
+            margin-bottom: 1.75rem;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 0.75rem;
+        }
+
+        .control-name {
+            font-size: 0.9rem;
+            color: var(--color-text-secondary);
+            letter-spacing: 0.05em;
+        }
+
+        .control-value {
+            font-size: 0.85rem;
+            color: var(--color-accent);
+        }
+
+        .control-hint {
+            font-size: 0.8rem;
+            color: var(--color-text-subtle);
+            font-style: italic;
+            margin-top: 0.4rem;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            appearance: none;
+            height: 1px;
+            background: var(--color-border);
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 13px;
+            height: 13px;
+            background: var(--color-accent);
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 13px;
+            height: 13px;
+            background: var(--color-accent);
+            cursor: pointer;
+            border-radius: 50%;
+            border: none;
+        }
+
+        /* Preview */
+        .preview-section {
+            width: 100%;
+            max-width: 620px;
+            margin-top: 1.75rem;
+            display: none;
+        }
+
+        .preview-label {
+            font-size: 0.75rem;
+            color: var(--color-text-subtle);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+        }
+
+        .preview-canvas {
+            width: 100%;
+            display: block;
+            border: 1px solid var(--color-border);
+        }
+
+        .preview-meta {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 0.75rem;
+            font-size: 0.8rem;
+            color: var(--color-text-subtle);
+        }
+
+        /* Actions */
+        .actions {
+            width: 100%;
+            max-width: 620px;
+            margin-top: 2rem;
+            display: none;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.8rem 2.5rem;
+            font-family: var(--font-display);
+            font-size: 0.95rem;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--color-accent);
+            color: #0a0a0a;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            opacity: 0.85;
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--color-text-subtle);
+            border: 1px solid var(--color-border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--color-accent);
+            color: var(--color-accent);
+        }
+
+        /* Progress */
+        .progress-section {
+            width: 100%;
+            max-width: 620px;
+            margin-top: 2.5rem;
+            display: none;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 0.75rem;
+        }
+
+        .progress-title {
+            font-size: 0.9rem;
+            color: var(--color-text-secondary);
+            letter-spacing: 0.05em;
+        }
+
+        .progress-percent {
+            font-size: 1.4rem;
+            color: var(--color-accent);
+            font-weight: 300;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 1px;
+            background: var(--color-border);
+            margin-bottom: 0.75rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--color-accent);
+            transition: width 0.2s ease;
+            width: 0%;
+        }
+
+        .progress-status {
+            font-size: 0.8rem;
+            color: var(--color-text-subtle);
+            font-style: italic;
+        }
+
+        .progress-note {
+            font-size: 0.78rem;
+            color: var(--color-text-subtle);
+            margin-top: 1rem;
+            opacity: 0.7;
+        }
+
+        /* Download */
+        .download-section {
+            width: 100%;
+            max-width: 620px;
+            margin-top: 2.5rem;
+            text-align: center;
+            display: none;
+        }
+
+        .download-check {
+            color: var(--color-accent);
+            margin-bottom: 1rem;
+        }
+
+        .download-title {
+            font-size: 1.6rem;
+            font-weight: 300;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.5rem;
+        }
+
+        .download-meta {
+            font-size: 0.88rem;
+            color: var(--color-text-subtle);
+            margin-bottom: 2rem;
+            font-style: italic;
+        }
+
+        .download-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 3.5rem;
+            color: var(--color-text-subtle);
+            text-decoration: none;
+            font-size: 0.85rem;
+            letter-spacing: 0.06em;
+            transition: color 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: var(--color-accent);
+        }
+
+        /* Error */
+        .error-banner {
+            width: 100%;
+            max-width: 620px;
+            padding: 1rem 1.5rem;
+            border: 1px solid rgba(194, 58, 58, 0.4);
+            color: #e07070;
+            font-size: 0.88rem;
+            margin-top: 1.5rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="tool-header">
+        <p class="site-label">Ensō no Sato — Internal Tools</p>
+        <h1 class="tool-title">Video Compression</h1>
+        <p class="tool-subtitle">Optimized for the luxury aesthetic of the website</p>
+        <div class="tool-specs">
+            <span class="spec-badge">720p · 1280×720</span>
+            <span class="spec-badge">30 FPS</span>
+            <span class="spec-badge">Black Filter Overlay</span>
+            <span class="spec-badge">Browser-based · No Upload</span>
+        </div>
+    </header>
+
+    <div class="divider"></div>
+
+    <!-- Upload -->
+    <div class="upload-zone" id="uploadZone">
+        <input type="file" id="fileInput" accept="video/*">
+        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="20" height="20" rx="2"/>
+            <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none" opacity="0.5"/>
+        </svg>
+        <span class="upload-label">Select or drop a video file</span>
+        <span class="upload-hint">MP4, MOV, WebM — processed locally in your browser</span>
+    </div>
+
+    <!-- Filter + Quality Controls -->
+    <div class="controls" id="controls">
+        <div class="control-row">
+            <div class="control-label">
+                <span class="control-name">Black Filter Intensity</span>
+                <span class="control-value" id="filterValueLabel">30%</span>
+            </div>
+            <input type="range" id="filterSlider" min="0" max="70" value="30" step="1">
+            <p class="control-hint">A subtle dark veil — enhances the luxury atmosphere and masks compression softness</p>
+        </div>
+        <div class="control-row">
+            <div class="control-label">
+                <span class="control-name">Output Bitrate</span>
+                <span class="control-value" id="bitrateValueLabel">2.5 Mbps</span>
+            </div>
+            <input type="range" id="bitrateSlider" min="1" max="6" value="2.5" step="0.5">
+            <p class="control-hint">Higher = better quality, larger file size. 2–3 Mbps is ideal for 720p web video</p>
+        </div>
+    </div>
+
+    <!-- Preview -->
+    <div class="preview-section" id="previewSection">
+        <p class="preview-label">Preview — First Frame with Filter Applied</p>
+        <canvas class="preview-canvas" id="previewCanvas"></canvas>
+        <div class="preview-meta">
+            <span id="previewOrigSize"></span>
+            <span id="previewDuration"></span>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions" id="actionsSection" style="display:none">
+        <button class="btn btn-primary" id="processBtn">Begin Processing</button>
+        <button class="btn btn-secondary" id="resetBtn">Choose Different File</button>
+    </div>
+
+    <!-- Error -->
+    <div class="error-banner" id="errorBanner"></div>
+
+    <!-- Progress -->
+    <div class="progress-section" id="progressSection">
+        <div class="progress-header">
+            <span class="progress-title">Processing</span>
+            <span class="progress-percent" id="progressPercent">0%</span>
+        </div>
+        <div class="progress-track">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <p class="progress-status" id="progressStatus">Initializing...</p>
+        <p class="progress-note">Processing runs in real time — your browser tab must stay open and active</p>
+    </div>
+
+    <!-- Download -->
+    <div class="download-section" id="downloadSection">
+        <svg class="download-check" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <h2 class="download-title">Processing Complete</h2>
+        <p class="download-meta" id="downloadMeta"></p>
+        <div class="download-actions">
+            <a id="downloadLink" class="btn btn-primary" download="enso-compressed.webm">Download Video</a>
+            <button class="btn btn-secondary" id="processAnotherBtn">Process Another</button>
+        </div>
+    </div>
+
+    <!-- Hidden video element used for frame capture -->
+    <video id="sourceVideo" style="display:none" muted playsinline preload="auto"></video>
+
+    <a href="/" class="back-link">← Return to Ensō no Sato</a>
+
+    <script>
+    (function () {
+        'use strict';
+
+        const fileInput       = document.getElementById('fileInput');
+        const uploadZone      = document.getElementById('uploadZone');
+        const controls        = document.getElementById('controls');
+        const filterSlider    = document.getElementById('filterSlider');
+        const filterValueLabel= document.getElementById('filterValueLabel');
+        const bitrateSlider   = document.getElementById('bitrateSlider');
+        const bitrateValueLabel = document.getElementById('bitrateValueLabel');
+        const previewSection  = document.getElementById('previewSection');
+        const previewCanvas   = document.getElementById('previewCanvas');
+        const previewOrigSize = document.getElementById('previewOrigSize');
+        const previewDuration = document.getElementById('previewDuration');
+        const actionsSection  = document.getElementById('actionsSection');
+        const processBtn      = document.getElementById('processBtn');
+        const resetBtn        = document.getElementById('resetBtn');
+        const errorBanner     = document.getElementById('errorBanner');
+        const progressSection = document.getElementById('progressSection');
+        const progressFill    = document.getElementById('progressFill');
+        const progressPercent = document.getElementById('progressPercent');
+        const progressStatus  = document.getElementById('progressStatus');
+        const downloadSection = document.getElementById('downloadSection');
+        const downloadLink    = document.getElementById('downloadLink');
+        const downloadMeta    = document.getElementById('downloadMeta');
+        const processAnotherBtn = document.getElementById('processAnotherBtn');
+        const sourceVideo     = document.getElementById('sourceVideo');
+
+        const TARGET_W = 1280;
+        const TARGET_H = 720;
+
+        let objectUrl = null;
+        let selectedFile = null;
+        let drawFrameId = null;
+
+        // ── Drag & drop ──────────────────────────────────────────────
+        uploadZone.addEventListener('dragover', e => {
+            e.preventDefault();
+            uploadZone.classList.add('drag-over');
+        });
+        uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+        uploadZone.addEventListener('drop', e => {
+            e.preventDefault();
+            uploadZone.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('video/')) handleFileSelect(file);
+        });
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files[0]) handleFileSelect(fileInput.files[0]);
+        });
+
+        // ── Slider live updates ───────────────────────────────────────
+        filterSlider.addEventListener('input', () => {
+            filterValueLabel.textContent = filterSlider.value + '%';
+            refreshPreview();
+        });
+        bitrateSlider.addEventListener('input', () => {
+            bitrateValueLabel.textContent = bitrateSlider.value + ' Mbps';
+        });
+
+        // ── File selection ────────────────────────────────────────────
+        function handleFileSelect(file) {
+            selectedFile = file;
+            hideError();
+            if (objectUrl) URL.revokeObjectURL(objectUrl);
+            objectUrl = URL.createObjectURL(file);
+            sourceVideo.src = objectUrl;
+            sourceVideo.load();
+            sourceVideo.addEventListener('loadedmetadata', onVideoReady, { once: true });
+        }
+
+        function onVideoReady() {
+            // Seek to 10% in for a representative preview frame
+            const seekTo = Math.min(sourceVideo.duration * 0.1, 3);
+            sourceVideo.currentTime = seekTo;
+            sourceVideo.addEventListener('seeked', drawPreview, { once: true });
+        }
+
+        function drawPreview() {
+            const vw = sourceVideo.videoWidth;
+            const vh = sourceVideo.videoHeight;
+
+            previewCanvas.width  = TARGET_W;
+            previewCanvas.height = TARGET_H;
+
+            const ctx = previewCanvas.getContext('2d');
+            renderFrame(ctx, parseFloat(filterSlider.value) / 100);
+
+            // Show file metadata
+            const fileMB = (selectedFile.size / (1024 * 1024)).toFixed(1);
+            const dur    = formatDuration(sourceVideo.duration);
+            previewOrigSize.textContent = `Source: ${vw}×${vh} · ${fileMB} MB`;
+            previewDuration.textContent = `Duration: ${dur}`;
+
+            controls.style.display       = 'block';
+            previewSection.style.display = 'block';
+            actionsSection.style.display = 'flex';
+        }
+
+        function refreshPreview() {
+            if (!sourceVideo.src || sourceVideo.readyState < 2) return;
+            const ctx = previewCanvas.getContext('2d');
+            renderFrame(ctx, parseFloat(filterSlider.value) / 100);
+        }
+
+        // ── Core frame renderer ───────────────────────────────────────
+        function renderFrame(ctx, filterOpacity) {
+            const vw = sourceVideo.videoWidth;
+            const vh = sourceVideo.videoHeight;
+
+            // Letterbox/pillarbox fit into 1280×720
+            const scale   = Math.min(TARGET_W / vw, TARGET_H / vh);
+            const drawW   = vw * scale;
+            const drawH   = vh * scale;
+            const offsetX = (TARGET_W - drawW) / 2;
+            const offsetY = (TARGET_H - drawH) / 2;
+
+            // Black background bars
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, TARGET_W, TARGET_H);
+
+            // Video frame
+            ctx.drawImage(sourceVideo, offsetX, offsetY, drawW, drawH);
+
+            // Luxury black filter overlay
+            if (filterOpacity > 0) {
+                ctx.fillStyle = `rgba(0,0,0,${filterOpacity})`;
+                ctx.fillRect(0, 0, TARGET_W, TARGET_H);
+            }
+        }
+
+        // ── Buttons ───────────────────────────────────────────────────
+        processBtn.addEventListener('click', startProcessing);
+        resetBtn.addEventListener('click', resetTool);
+        processAnotherBtn.addEventListener('click', resetTool);
+
+        function resetTool() {
+            if (drawFrameId) cancelAnimationFrame(drawFrameId);
+            selectedFile = null;
+            sourceVideo.pause();
+            sourceVideo.src = '';
+            if (objectUrl) { URL.revokeObjectURL(objectUrl); objectUrl = null; }
+            fileInput.value = '';
+
+            uploadZone.style.display     = 'block';
+            controls.style.display       = 'none';
+            previewSection.style.display = 'none';
+            actionsSection.style.display = 'none';
+            progressSection.style.display= 'none';
+            downloadSection.style.display= 'none';
+            hideError();
+        }
+
+        // ── Processing ────────────────────────────────────────────────
+        async function startProcessing() {
+            if (!selectedFile) return;
+
+            // Check MediaRecorder support
+            if (typeof MediaRecorder === 'undefined') {
+                showError('MediaRecorder is not supported in this browser. Please use a modern Chromium-based or Firefox browser.');
+                return;
+            }
+
+            actionsSection.style.display  = 'none';
+            progressSection.style.display = 'block';
+            setProgress(0, 'Preparing canvas…');
+
+            const filterOpacity = parseFloat(filterSlider.value) / 100;
+            const bitrateMbps   = parseFloat(bitrateSlider.value);
+
+            // Off-screen canvas at 720p
+            const canvas = document.createElement('canvas');
+            canvas.width  = TARGET_W;
+            canvas.height = TARGET_H;
+            const ctx = canvas.getContext('2d');
+
+            // Choose best supported MIME type
+            const mimeType = chooseMimeType();
+            if (!mimeType) {
+                showError('No supported video encoding format found in this browser. Try Chrome or Firefox.');
+                actionsSection.style.display = 'flex';
+                progressSection.style.display= 'none';
+                return;
+            }
+
+            // Stream at 30fps
+            const stream   = canvas.captureStream(30);
+            const recorder = new MediaRecorder(stream, {
+                mimeType,
+                videoBitsPerSecond: bitrateMbps * 1_000_000
+            });
+
+            const chunks = [];
+            recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+
+            recorder.onstop = () => {
+                const blob    = new Blob(chunks, { type: mimeType });
+                const url     = URL.createObjectURL(blob);
+                const sizeMB  = (blob.size / (1024 * 1024)).toFixed(1);
+                const dur     = formatDuration(sourceVideo.duration);
+                const ext     = mimeType.includes('mp4') ? 'mp4' : 'webm';
+
+                downloadLink.href     = url;
+                downloadLink.download = `enso-compressed.${ext}`;
+                downloadMeta.textContent = `720p · 30fps · ${filterSlider.value}% filter · ${sizeMB} MB · ${dur}`;
+
+                progressSection.style.display = 'none';
+                downloadSection.style.display = 'block';
+            };
+
+            // Reset video to beginning and await seek
+            sourceVideo.currentTime = 0;
+            await waitForSeek(sourceVideo);
+
+            const duration = sourceVideo.duration;
+            setProgress(0, `Processing ${formatDuration(duration)} of video…`);
+
+            recorder.start(250); // collect data every 250 ms
+
+            // Draw loop — runs at display refresh rate; captureStream limits to 30fps
+            function drawLoop() {
+                if (sourceVideo.ended || sourceVideo.paused) return;
+
+                renderFrame(ctx, filterOpacity);
+
+                const pct = Math.min((sourceVideo.currentTime / duration) * 100, 99);
+                setProgress(pct, `Frame ${formatDuration(sourceVideo.currentTime)} / ${formatDuration(duration)}`);
+
+                drawFrameId = requestAnimationFrame(drawLoop);
+            }
+
+            sourceVideo.addEventListener('ended', () => {
+                cancelAnimationFrame(drawFrameId);
+                // Render final frame
+                renderFrame(ctx, filterOpacity);
+                setProgress(100, 'Finalizing…');
+                // Give recorder a moment to flush
+                setTimeout(() => recorder.stop(), 600);
+            }, { once: true });
+
+            sourceVideo.play().catch(err => {
+                showError('Could not play video for processing: ' + err.message);
+                recorder.stop();
+                progressSection.style.display = 'none';
+                actionsSection.style.display  = 'flex';
+            });
+
+            drawLoop();
+        }
+
+        // ── Helpers ───────────────────────────────────────────────────
+        function setProgress(pct, status) {
+            progressFill.style.width     = pct + '%';
+            progressPercent.textContent  = Math.round(pct) + '%';
+            progressStatus.textContent   = status;
+        }
+
+        function chooseMimeType() {
+            const candidates = [
+                'video/webm;codecs=vp9',
+                'video/webm;codecs=vp8',
+                'video/webm',
+                'video/mp4;codecs=avc1',
+                'video/mp4'
+            ];
+            return candidates.find(t => MediaRecorder.isTypeSupported(t)) || null;
+        }
+
+        function waitForSeek(video) {
+            return new Promise(resolve => {
+                if (video.readyState >= 2) {
+                    video.addEventListener('seeked', resolve, { once: true });
+                } else {
+                    video.addEventListener('canplay', () => {
+                        video.addEventListener('seeked', resolve, { once: true });
+                    }, { once: true });
+                }
+            });
+        }
+
+        function formatDuration(seconds) {
+            if (!isFinite(seconds)) return '—';
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return m > 0 ? `${m}m ${s}s` : `${s}s`;
+        }
+
+        function showError(msg) {
+            errorBanner.textContent = msg;
+            errorBanner.style.display = 'block';
+        }
+
+        function hideError() {
+            errorBanner.style.display = 'none';
+        }
+
+    })();
+    </script>
+</body>
+</html>
