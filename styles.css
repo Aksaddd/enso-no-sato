@@ -976,6 +976,87 @@ body {
     }
 }
 
+/* Menu item images are clickable */
+.menu-image {
+    cursor: zoom-in;
+}
+
+/* ============================================
+   MENU LIGHTBOX
+   ============================================ */
+
+.menu-lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: rgba(0, 0, 0, 0.92);
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    opacity: 0;
+    transition: opacity var(--transition-medium);
+}
+
+.menu-lightbox.active {
+    opacity: 1;
+}
+
+.menu-lightbox-close {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    font-size: 2rem;
+    color: var(--color-text-subtle);
+    cursor: pointer;
+    background: none;
+    border: none;
+    line-height: 1;
+    transition: color var(--transition-fast);
+    font-family: var(--font-display);
+}
+
+.menu-lightbox-close:hover {
+    color: var(--color-text-primary);
+}
+
+.menu-lightbox-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    max-width: 800px;
+    width: 100%;
+}
+
+.menu-lightbox-img {
+    max-width: 100%;
+    max-height: 75vh;
+    object-fit: contain;
+    display: block;
+}
+
+.menu-lightbox-info {
+    text-align: center;
+    border-top: 1px solid var(--color-border);
+    padding-top: 1.25rem;
+    width: 100%;
+}
+
+.menu-lightbox-name {
+    font-size: 1.4rem;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    color: var(--color-text-primary);
+    margin-bottom: 0.35rem;
+}
+
+.menu-lightbox-desc {
+    font-size: 0.95rem;
+    color: var(--color-text-subtle);
+    font-style: italic;
+}
+
 /* ============================================
    ANIMATIONS
    ============================================ */

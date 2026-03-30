@@ -230,7 +230,7 @@
 
             <div class="menu-item">
                 <div class="menu-image-wrapper">
-                    <img src="assets/gallery/grilled-mackerel.jpg.jpg" alt="Grilled Mackerel" class="menu-image">
+                    <img src="assets/gallery/grilled-mackerel.jpg.jpg" alt="Grilled Mackerel" class="menu-image" onclick="openMenuLightbox(this.src,'Grilled Mackerel','Charred leek vinaigrette, mizuna salad')">
                 </div>
                 <div class="menu-info">
                     <p class="menu-dish-name">Grilled Mackerel</p>
@@ -240,7 +240,7 @@
 
             <div class="menu-item">
                 <div class="menu-image-wrapper">
-                    <img src="assets/gallery/tokyo-negima.jpg.jpg" alt="Tokyo Negima" class="menu-image">
+                    <img src="assets/gallery/tokyo-negima.jpg.jpg" alt="Tokyo Negima" class="menu-image" onclick="openMenuLightbox(this.src,'Tokyo Negima','Chicken thigh, charcoal-grilled with sweet leek')">
                 </div>
                 <div class="menu-info">
                     <p class="menu-dish-name">Tokyo Negima</p>
@@ -250,7 +250,7 @@
 
             <div class="menu-item">
                 <div class="menu-image-wrapper">
-                    <img src="assets/gallery/yakitoris.jpg.jpg" alt="Yakitori Selection" class="menu-image">
+                    <img src="assets/gallery/yakitoris.jpg.jpg" alt="Yakitori Selection" class="menu-image" onclick="openMenuLightbox(this.src,'Yakitori Selection','Chef\'s rotating skewers from the binchotan grill')">
                 </div>
                 <div class="menu-info">
                     <p class="menu-dish-name">Yakitori Selection</p>
@@ -260,7 +260,7 @@
 
             <div class="menu-item">
                 <div class="menu-image-wrapper">
-                    <img src="assets/gallery/Smoke ocean trout.jpg" alt="Smoked Ocean Trout" class="menu-image">
+                    <img src="assets/gallery/Smoke ocean trout.jpg" alt="Smoked Ocean Trout" class="menu-image" onclick="openMenuLightbox(this.src,'Smoked Ocean Trout','Nigiri, delicately kissed by smoke')">
                 </div>
                 <div class="menu-info">
                     <p class="menu-dish-name">Smoked Ocean Trout</p>
@@ -270,7 +270,7 @@
 
             <div class="menu-item">
                 <div class="menu-image-wrapper">
-                    <img src="assets/gallery/ika-squid.jpg.jpg" alt="Ika" class="menu-image">
+                    <img src="assets/gallery/ika-squid.jpg.jpg" alt="Ika" class="menu-image" onclick="openMenuLightbox(this.src,'Ika','Fresh squid nigiri, lime zest')">
                 </div>
                 <div class="menu-info">
                     <p class="menu-dish-name">Ika</p>
@@ -280,7 +280,7 @@
 
             <div class="menu-item">
                 <div class="menu-image-wrapper">
-                    <img src="assets/gallery/bluefin-tuna.jpg.jpg" alt="Bluefin Tuna" class="menu-image">
+                    <img src="assets/gallery/bluefin-tuna.jpg.jpg" alt="Bluefin Tuna" class="menu-image" onclick="openMenuLightbox(this.src,'Bluefin Tuna','Premium akami nigiri')">
                 </div>
                 <div class="menu-info">
                     <p class="menu-dish-name">Bluefin Tuna</p>
@@ -290,7 +290,7 @@
 
             <div class="menu-item">
                 <div class="menu-image-wrapper">
-                    <img src="assets/gallery/hokkaido-scallop.jpg.jpg" alt="Hokkaido Scallop" class="menu-image">
+                    <img src="assets/gallery/hokkaido-scallop.jpg.jpg" alt="Hokkaido Scallop" class="menu-image" onclick="openMenuLightbox(this.src,'Hokkaido Scallop','Sweet, briny nigiri, delicately dressed')">
                 </div>
                 <div class="menu-info">
                     <p class="menu-dish-name">Hokkaido Scallop</p>
@@ -300,7 +300,7 @@
 
             <div class="menu-item">
                 <div class="menu-image-wrapper">
-                    <img src="assets/gallery/chawanmushi.jpg.jpg" alt="Chawanmushi" class="menu-image">
+                    <img src="assets/gallery/chawanmushi.jpg.jpg" alt="Chawanmushi" class="menu-image" onclick="openMenuLightbox(this.src,'Chawanmushi','Silken egg custard, ikura, black truffle')">
                 </div>
                 <div class="menu-info">
                     <p class="menu-dish-name">Chawanmushi</p>
@@ -310,7 +310,7 @@
 
             <div class="menu-item">
                 <div class="menu-image-wrapper">
-                    <img src="assets/gallery/ebi-uni-shiso.jpg.jpg" alt="Ebi with Uni Shiso" class="menu-image">
+                    <img src="assets/gallery/ebi-uni-shiso.jpg.jpg" alt="Ebi with Uni Shiso" class="menu-image" onclick="openMenuLightbox(this.src,'Ebi with Uni Shiso','Shrimp, sea urchin, shiso, edible flowers')">
                 </div>
                 <div class="menu-info">
                     <p class="menu-dish-name">Ebi with Uni Shiso</p>
@@ -320,6 +320,18 @@
 
         </div>
     </section>
+
+    <!-- Menu Lightbox Modal -->
+    <div class="menu-lightbox" id="menuLightbox">
+        <button class="menu-lightbox-close" onclick="closeMenuLightbox()">&times;</button>
+        <div class="menu-lightbox-content">
+            <img src="" alt="" class="menu-lightbox-img" id="menuLightboxImg">
+            <div class="menu-lightbox-info">
+                <p class="menu-lightbox-name" id="menuLightboxName"></p>
+                <p class="menu-lightbox-desc" id="menuLightboxDesc"></p>
+            </div>
+        </div>
+    </div>
 
     <!-- Info Section -->
     <section class="info-section">

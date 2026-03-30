@@ -183,6 +183,32 @@ async function loadHoursData() {
     }
 }
 
+// Menu item lightbox
+function openMenuLightbox(src, name, desc) {
+    const lightbox = document.getElementById('menuLightbox');
+    document.getElementById('menuLightboxImg').src = src;
+    document.getElementById('menuLightboxName').textContent = name;
+    document.getElementById('menuLightboxDesc').textContent = desc;
+    lightbox.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => lightbox.classList.add('active'));
+}
+
+function closeMenuLightbox() {
+    const lightbox = document.getElementById('menuLightbox');
+    lightbox.classList.remove('active');
+    setTimeout(() => {
+        lightbox.style.display = 'none';
+        document.body.style.overflow = '';
+    }, 300);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('menuLightbox').addEventListener('click', e => {
+        if (e.target === e.currentTarget) closeMenuLightbox();
+    });
+});
+
 let currentImageIndex = 0;
 
 // Open lightbox with animation
