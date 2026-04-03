@@ -92,18 +92,9 @@ function renderChefs(chefs) {
     `).join('') + '</div>';
 }
 
-// Load experience media from API and render
+// Experiences are hardcoded in HTML — no API call needed
 async function loadExperiencesData() {
-    try {
-        const response = await fetch('/api/experiences');
-        const data = await response.json();
-        if (data.items && data.items.length > 0) {
-            const activeItems = data.items.filter(i => i.active !== false);
-            renderExperiences(activeItems);
-        }
-    } catch (error) {
-        // Keep coming soon placeholder if API not available
-    }
+    // No-op: interior images are hardcoded in index.html
 }
 
 function renderExperiences(items) {
