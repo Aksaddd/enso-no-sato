@@ -40,6 +40,35 @@ function renderGallery() {
     `).join('');
 }
 
+// Smart-parse an experience entry so a single "label" / "price" pair can
+// carry a title, a conditions/meta line, a primary price, and a price note
+// without requiring schema changes upstream.
+function parseExperienceEntry(item) {
+    const rawLabel = (item.label || '').trim();
+    const rawPrice = (item.price || '').trim();
+
+    const labelMatch = rawLabel.match(/^([^(]+?)\s*\(([^)]+)\)\s*$/);
+    const title = labelMatch ? labelMatch[1].trim() : rawLabel;
+    const meta = labelMatch ? labelMatch[2].trim() : '';
+
+    const priceHead = /^(\$[\d.,]+(?:\s*[–—-]\s*\$?[\d.,]+)?|À la carte|Market price|MP)/i;
+    const headMatch = rawPrice.match(priceHead);
+    let priceMain = rawPrice;
+    let priceNote = '';
+    if (headMatch) {
+        priceMain = headMatch[0].trim();
+        priceNote = rawPrice.slice(headMatch[0].length).replace(/^\s*[–—-]\s*/, '').trim();
+    }
+
+    return { title, meta, priceMain, priceNote };
+}
+
+function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, ch => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[ch]));
+}
+
 // Load menu data from API and update the DOM
 async function loadMenuData() {
     try {
@@ -49,12 +78,21 @@ async function loadMenuData() {
             const activeItems = data.experiences.filter(item => item.active !== false);
             const container = document.querySelector('.experience-list');
             if (container && activeItems.length > 0) {
-                container.innerHTML = activeItems.map(item => `
-                    <div class="experience-item">
-                        <span class="experience-label">${item.label}</span>
-                        <span class="experience-price">${item.price}</span>
+                container.innerHTML = activeItems.map(item => {
+                    const { title, meta, priceMain, priceNote } = parseExperienceEntry(item);
+                    return `
+                    <div class="experience-item${meta || priceNote ? ' experience-item--rich' : ''}">
+                        <div class="experience-content">
+                            <span class="experience-label">${escapeHtml(title)}</span>
+                            ${meta ? `<span class="experience-meta">${escapeHtml(meta)}</span>` : ''}
+                        </div>
+                        <div class="experience-pricing">
+                            <span class="experience-price">${escapeHtml(priceMain)}</span>
+                            ${priceNote ? `<span class="experience-note">${escapeHtml(priceNote)}</span>` : ''}
+                        </div>
                     </div>
-                `).join('');
+                `;
+                }).join('');
             }
         }
     } catch (error) {

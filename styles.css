@@ -402,6 +402,34 @@ body {
     line-height: 1.6;
 }
 
+.hours-note {
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid var(--color-border);
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 400;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-text-subtle);
+    line-height: 1.6;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.hours-note-accent {
+    color: var(--color-accent);
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+.hours-note-divider {
+    color: var(--color-accent);
+    opacity: 0.5;
+}
+
 .experience-list {
     display: flex;
     flex-direction: column;
@@ -411,21 +439,105 @@ body {
 .experience-item {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding-bottom: var(--spacing-xs);
+    align-items: baseline;
+    gap: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
     border-bottom: 1px solid var(--color-border);
 }
 
+.experience-item--rich {
+    align-items: flex-start;
+    padding-bottom: var(--spacing-md);
+}
+
+.experience-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.experience-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
 .experience-label {
-    font-size: 1rem;
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 400;
+    line-height: 1.35;
+    letter-spacing: 0.02em;
     color: var(--color-text-secondary);
+}
+
+.experience-item--rich .experience-label {
+    color: var(--color-text-primary);
+    font-size: 1.1rem;
+}
+
+.experience-meta {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    line-height: 1.5;
+    opacity: 0.85;
+}
+
+.experience-pricing {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+    gap: 0.35rem;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .experience-price {
     font-family: var(--font-display);
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     font-weight: 500;
     color: var(--color-accent);
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+}
+
+.experience-note {
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-style: italic;
+    font-weight: 300;
+    color: var(--color-text-subtle);
+    line-height: 1.45;
+    text-align: right;
+    max-width: 18ch;
+    white-space: normal;
+}
+
+@media (max-width: 480px) {
+    .experience-item--rich {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.6rem;
+    }
+
+    .experience-item--rich .experience-pricing {
+        align-items: flex-start;
+        text-align: left;
+        flex-direction: row;
+        gap: var(--spacing-sm);
+        white-space: normal;
+    }
+
+    .experience-item--rich .experience-note {
+        text-align: left;
+        max-width: none;
+    }
 }
 
 .info-link {
