@@ -159,30 +159,8 @@ async function loadHeroVideo() {
     // No-op: video src is set directly in index.html
 }
 
-// Load hours data from API and update the DOM
-async function loadHoursData() {
-    try {
-        const response = await fetch('/api/hours');
-        const data = await response.json();
-        const container = document.querySelector('.hours-content');
-        if (container && data.izakaya && data.omakase) {
-            container.innerHTML = `
-                <div class="hours-item">
-                    <h4>${data.izakaya.title}</h4>
-                    <p>${data.izakaya.hours}</p>
-                </div>
-                <div class="hours-item">
-                    <h4>${data.omakase.title}</h4>
-                    <p>${data.omakase.lunch}</p>
-                    <p>${data.omakase.dinner}</p>
-                    <p>${data.omakase.seatings}</p>
-                </div>
-            `;
-        }
-    } catch (error) {
-        // Keep existing HTML if API is not available
-    }
-}
+// Hours are rendered from static HTML; admin-driven hours are paused.
+async function loadHoursData() {}
 
 // Menu item lightbox
 function openMenuLightbox(src, name, desc) {
