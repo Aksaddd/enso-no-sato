@@ -75,7 +75,9 @@ async function loadMenuData() {
         const response = await fetch('/api/menu');
         const data = await response.json();
         if (data.experiences && data.experiences.length > 0) {
-            const activeItems = data.experiences.filter(item => item.active !== false);
+            const activeItems = data.experiences.filter(item =>
+                item.active !== false && !/happy\s*hour/i.test(item.label || '')
+            );
             const container = document.querySelector('.experience-list');
             if (container && activeItems.length > 0) {
                 container.innerHTML = activeItems.map(item => {
