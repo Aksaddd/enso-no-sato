@@ -112,36 +112,6 @@ async function loadMenuData() {
     }
 }
 
-// Load chefs data from API and render
-async function loadChefsData() {
-    try {
-        const response = await fetch('/api/chefs');
-        const data = await response.json();
-        if (data.chefs && data.chefs.length > 0) {
-            const activeChefs = data.chefs.filter(c => c.active !== false);
-            renderChefs(activeChefs);
-        }
-    } catch (error) {
-        // Keep coming soon placeholder if API not available
-    }
-}
-
-function renderChefs(chefs) {
-    const container = document.getElementById('chefs-container');
-    if (!container || chefs.length === 0) return;
-
-    container.innerHTML = '<div class="chefs-grid">' + chefs.map(chef => `
-        <div class="chef-card">
-            <div class="chef-photo-wrapper">
-                ${chef.photo ? `<img src="${getImageSrc(chef.photo)}" alt="${chef.name}">` : ''}
-            </div>
-            <h3 class="chef-name">${chef.name}</h3>
-            ${chef.role ? `<p class="chef-role">${chef.role}</p>` : ''}
-            ${chef.bio ? `<p class="chef-bio">${chef.bio}</p>` : ''}
-        </div>
-    `).join('') + '</div>';
-}
-
 // Experiences are hardcoded in HTML — no API call needed
 async function loadExperiencesData() {
     // No-op: interior images are hardcoded in index.html
@@ -415,7 +385,6 @@ document.getElementById('lightbox').addEventListener('click', (e) => {
             loadGalleryData(),
             loadMenuData(),
             loadHoursData(),
-            loadChefsData(),
             loadExperiencesData(),
             loadHeroVideo()
         ]);
