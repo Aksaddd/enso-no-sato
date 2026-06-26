@@ -226,7 +226,7 @@ async function initializeData() {
         const menuCount = await MenuItem.countDocuments();
         if (menuCount === 0) {
             await MenuItem.insertMany([
-                { label: '18 Course Omakase', price: '$135', active: true, order: 1 },
+                { label: '18 Course Omakase Bar', price: '$135', active: true, order: 1 },
                 { label: '14 Course Omakase Table Tasting', price: '$85', active: true, order: 2 },
                 { label: 'Kitchen & Bar Menu', price: 'À la carte', active: true, order: 3 }
             ]);
