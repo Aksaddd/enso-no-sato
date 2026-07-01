@@ -575,6 +575,26 @@ body {
     background-color: transparent;
 }
 
+.order-button {
+    display: inline-block;
+    padding: 0.8rem 2rem;
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--color-text-primary);
+    background-color: transparent;
+    border: 1px solid var(--color-text-primary);
+    transition: all var(--transition-fast);
+    margin-top: var(--spacing-sm);
+}
+
+.order-button:hover {
+    color: var(--color-bg-deep);
+    background-color: var(--color-text-primary);
+}
+
 /* ============================================
    EXPERIENCES SECTION
    ============================================ */
@@ -1654,7 +1674,8 @@ body {
         padding: var(--spacing-sm);
     }
     
-    .resy-button {
+    .resy-button,
+    .order-button {
         padding: 0.7rem 1.5rem;
         font-size: 0.8rem;
     }
