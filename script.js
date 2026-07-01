@@ -270,12 +270,33 @@ document.getElementById('lightbox').addEventListener('click', (e) => {
         const video = document.querySelector('.bg-video');
         if (!video) return;
 
-        // Try to play immediately
-        video.play().catch(() => {
-            // Autoplay blocked, try on interaction
-            ['touchstart', 'click'].forEach(event => {
-                document.addEventListener(event, () => video.play(), { once: true });
-            });
+        // iOS Safari requires muted + inline set as properties (not just attributes)
+        // for muted autoplay to be allowed.
+        video.muted = true;
+        video.defaultMuted = true;
+        video.playsInline = true;
+        video.setAttribute('muted', '');
+        video.setAttribute('playsinline', '');
+
+        const tryPlay = () => {
+            const p = video.play();
+            if (p && typeof p.catch === 'function') p.catch(() => {});
+        };
+
+        // Attempt immediately and again once enough data is buffered.
+        tryPlay();
+        video.addEventListener('loadeddata', tryPlay);
+        video.addEventListener('canplay', tryPlay);
+
+        // Fallback: first user interaction unblocks playback if autoplay was denied.
+        ['touchstart', 'touchend', 'click', 'scroll'].forEach(event => {
+            document.addEventListener(event, tryPlay, { once: true, passive: true });
+        });
+
+        // iOS pauses background video when leaving/returning to the tab or
+        // coming back from Low Power Mode — resume when visible again.
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) tryPlay();
         });
     }
 
