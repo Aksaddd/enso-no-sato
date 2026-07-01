@@ -226,19 +226,25 @@ async function initializeData() {
         const menuCount = await MenuItem.countDocuments();
         if (menuCount === 0) {
             await MenuItem.insertMany([
-                { label: '14 Course Omakase Counter', price: '$135', active: true, order: 1 },
+                { label: '18 Course Omakase Counter', price: '$135', active: true, order: 1 },
                 { label: '14 Course Omakase Table Tasting', price: '$85', active: true, order: 2 },
                 { label: 'Kitchen & Bar Menu', price: 'À la carte', active: true, order: 3 }
             ]);
             console.log('Default menu items created');
         }
 
-        // One-time migration: rename legacy "18 Course" omakase item to the 14-course counter
-        const legacyOmakase = await MenuItem.findOne({ label: /^18 Course Omakase/i });
-        if (legacyOmakase) {
-            legacyOmakase.label = '14 Course Omakase Counter';
-            await legacyOmakase.save();
-            console.log('Migrated legacy "18 Course Omakase" menu item to "14 Course Omakase Counter"');
+        // Normalize omakase experience labels to current course counts (idempotent)
+        const counterItem = await MenuItem.findOne({ label: /Omakase Counter/i });
+        if (counterItem && counterItem.label !== '18 Course Omakase Counter') {
+            counterItem.label = '18 Course Omakase Counter';
+            await counterItem.save();
+            console.log('Updated Omakase Counter label to "18 Course Omakase Counter"');
+        }
+        const tableTastingItem = await MenuItem.findOne({ label: /Table Tasting/i });
+        if (tableTastingItem && tableTastingItem.label !== '14 Course Omakase Table Tasting') {
+            tableTastingItem.label = '14 Course Omakase Table Tasting';
+            await tableTastingItem.save();
+            console.log('Updated Omakase Table Tasting label to "14 Course Omakase Table Tasting"');
         }
 
         // Create default gallery items if none exist
