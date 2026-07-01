@@ -583,16 +583,16 @@ body {
     letter-spacing: 0.2em;
     text-transform: uppercase;
     text-decoration: none;
-    color: var(--color-text-primary);
-    background-color: transparent;
-    border: 1px solid var(--color-text-primary);
+    color: var(--color-bg-deep);
+    background-color: var(--color-accent);
+    border: 1px solid var(--color-accent);
     transition: all var(--transition-fast);
     margin-top: var(--spacing-sm);
 }
 
 .order-button:hover {
-    color: var(--color-bg-deep);
-    background-color: var(--color-text-primary);
+    color: var(--color-accent);
+    background-color: transparent;
 }
 
 /* ============================================
