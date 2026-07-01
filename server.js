@@ -233,6 +233,14 @@ async function initializeData() {
             console.log('Default menu items created');
         }
 
+        // One-time migration: rename legacy "18 Course" omakase item to the 14-course counter
+        const legacyOmakase = await MenuItem.findOne({ label: /^18 Course Omakase/i });
+        if (legacyOmakase) {
+            legacyOmakase.label = '14 Course Omakase Counter';
+            await legacyOmakase.save();
+            console.log('Migrated legacy "18 Course Omakase" menu item to "14 Course Omakase Counter"');
+        }
+
         // Create default gallery items if none exist
         const galleryCount = await GalleryItem.countDocuments();
         if (galleryCount === 0) {
