@@ -94,17 +94,7 @@ async function loadMenuData() {
                         </div>
                     </div>
                 `;
-                }).join('') + `
-                    <div class="experience-item experience-item--rich">
-                        <div class="experience-content">
-                            <span class="experience-label">Happy Hour</span>
-                            <span class="experience-meta">Tue – Fri · 5 – 7pm · Cocktail Bar</span>
-                        </div>
-                        <div class="experience-pricing">
-                            <span class="experience-price">$6 – $12</span>
-                        </div>
-                    </div>
-                `;
+                }).join('');
             }
         }
     } catch (error) {
