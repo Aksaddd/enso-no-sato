@@ -15,37 +15,59 @@ A luxury minimalist website for Ensō no Sato, a Japanese omakase and izakaya re
 ## Features
 
 ### Public Website
-- Elegant landing page with video background
-- Rotating "Coming Soon" text in multiple languages (English, Korean, Chinese, Japanese)
-- Responsive design for all devices
-- Dynamic menu and gallery loaded from database
+- Elegant single-page site with a full-screen hero video background
+- Menu sections: Omakase, From the Kitchen, Cocktails, Happy Hour, Lunch & Brunch
+- Photo gallery / experiences, restaurant story, hours, and private events
+- Reservations via Resy and online ordering via Toast
+- Fully responsive design for all devices
+- Menu prices and hours can be driven dynamically from the database
 
 ### Admin Portal (`/admin`)
 - Secure login authentication
-- **Menu Management:** Add, edit, delete menu items with prices
+- **Menu Management:** Add, edit, delete menu/experience items with prices
 - **Gallery Management:** Upload images, add haikus, categorize as dish/drink
 - **Hours Management:** Update business hours for Izakaya Bar and Omakase
+- **Chefs & Experience Media:** Manage chef profiles and experience photos/video
+- **Hero Video:** Update the landing-page background video
 - **Password Change:** Secure password update functionality
 
 ## Project Structure
 
+Everything the live site needs is at the repo root or inside `assets/`, `admin/`,
+and `tools/` (these are the only paths Vercel deploys — see `vercel.json`).
+Design/working files live in `design-source/` and are **not** deployed.
+
 ```
 enso-no-sato/
-├── index.html              # Main landing page
-├── styles.css              # Global styles
-├── script.js               # Frontend JavaScript
-├── server.js               # Express backend server
-├── package.json            # Node.js dependencies
-├── vercel.json             # Vercel deployment config
-├── .env                    # Environment variables (not in repo)
-├── admin/
-│   ├── login.html          # Admin login page
-│   └── dashboard.html      # Admin dashboard
-└── assets/
-    ├── logo.png            # Restaurant logo
-    ├── enso-koi-loop.mp4   # Background video
-    └── gallery/            # Gallery images
+├── index.html              # Main landing page (all public content/sections)
+├── styles.css              # Global styles + design tokens (CSS variables)
+├── script.js               # Frontend JS (loads menu/gallery from API, hero video, nav)
+├── server.js               # Express backend: API routes, admin auth, MongoDB models
+├── package.json            # Node.js dependencies & scripts
+├── vercel.json             # Vercel build + routing config
+├── .env.example            # Template for required environment variables
+├── .env                    # Real environment variables (git-ignored, not in repo)
+│
+├── admin/                  # Admin CMS (served statically, gated by server.js auth)
+│   ├── login.html          #   Admin login page
+│   └── dashboard.html      #   Admin dashboard (menu / gallery / hours / chefs)
+│
+├── assets/                 # Everything served to the browser
+│   ├── logo.png            #   Restaurant logo (used site-wide)
+│   ├── favicon.svg         #   Favicon
+│   └── gallery/            #   Gallery & experience photos
+│       └── archive/        #     Retired images, kept out of the way
+│
+├── tools/                  # Internal utilities
+│   └── compress-video.html #   Browser-based video compressor
+│
+└── design-source/          # Brand/design working files — NOT used by the site
+    ├── README.md           #   Explains what's in here
+    └── ...                 #   Logo exports, brand PDF, WIP graphics
 ```
+
+> The hero background video is hosted externally (Cloudflare R2) and referenced
+> by URL in `index.html` — it is not stored in the repo.
 
 ## Local Development
 
