@@ -353,6 +353,16 @@ body {
     margin-bottom: var(--spacing-md);
 }
 
+.story-subtitle {
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--color-text-subtle);
+    margin-top: -0.75rem;
+    margin-bottom: var(--spacing-md);
+}
+
 .info-text {
     font-family: var(--font-body);
     font-size: clamp(1rem, 1.5vw, 1.1rem);
