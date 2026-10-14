@@ -167,7 +167,39 @@ document.addEventListener('DOMContentLoaded', () => {
         if (img.classList.contains('logo') || img.classList.contains('footer-logo')) return;
         openMenuLightbox(img.src, img.alt || '', '');
     });
+
+    initCarteTabs();
 });
+
+// Kitchen & Bar menu tabs — without JS the tablist stays hidden and every panel shows
+function initCarteTabs() {
+    const tablist = document.querySelector('.carte-tabs');
+    if (!tablist) return;
+    const tabs = Array.from(tablist.querySelectorAll('.carte-tab'));
+
+    function select(tab, focus) {
+        tabs.forEach(t => {
+            const active = t === tab;
+            t.setAttribute('aria-selected', active);
+            t.tabIndex = active ? 0 : -1;
+            document.getElementById(t.getAttribute('aria-controls')).hidden = !active;
+        });
+        if (focus) tab.focus();
+    }
+
+    tabs.forEach((tab, i) => {
+        tab.addEventListener('click', () => select(tab, false));
+        tab.addEventListener('keydown', e => {
+            const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+            if (!step) return;
+            e.preventDefault();
+            select(tabs[(i + step + tabs.length) % tabs.length], true);
+        });
+    });
+
+    tablist.hidden = false;
+    select(tabs[0], false);
+}
 
 let currentImageIndex = 0;
 
