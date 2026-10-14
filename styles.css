@@ -1500,9 +1500,29 @@ body {
     line-height: 1.5;
 }
 
+/* Center a lone trailing tile instead of leaving it flush left */
+@media (min-width: 901px) {
+    .menu-grid > .menu-item:last-child:nth-child(3n + 1) {
+        grid-column: 2;
+    }
+}
+
 @media (max-width: 900px) {
     .menu-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .menu-grid > .menu-item:last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+        width: calc(50% - 0.75rem);
+        justify-self: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .menu-grid > .menu-item:last-child:nth-child(odd) {
+        width: auto;
+        justify-self: stretch;
     }
 }
 
