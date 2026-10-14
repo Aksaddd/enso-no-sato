@@ -169,7 +169,39 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     initCarteTabs();
+    initStickyReserve();
+
+    document.querySelectorAll('.js-year').forEach(el => { el.textContent = new Date().getFullYear(); });
 });
+
+// Floating "Reserve" button: hidden over the hero (which has its own button)
+// and once the Reservations section is reached, visible everywhere in between
+function initStickyReserve() {
+    const button = document.getElementById('stickyReserve');
+    const hero = document.getElementById('hero');
+    const reservations = document.getElementById('reservations');
+    if (!button || !hero || !reservations) return;
+
+    let ticking = false;
+    function update() {
+        ticking = false;
+        const pastHero = hero.getBoundingClientRect().bottom < 0;
+        const atReservations = reservations.getBoundingClientRect().top < window.innerHeight;
+        const show = pastHero && !atReservations;
+        button.classList.toggle('is-visible', show);
+        button.setAttribute('aria-hidden', String(!show));
+        button.tabIndex = show ? 0 : -1;
+    }
+
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            ticking = true;
+            requestAnimationFrame(update);
+        }
+    }, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+}
 
 // Kitchen & Bar menu tabs — without JS the tablist stays hidden and every panel shows
 function initCarteTabs() {
