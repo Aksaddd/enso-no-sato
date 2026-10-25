@@ -341,6 +341,11 @@ body {
     margin: 0.4rem 0 var(--spacing-md);
 }
 
+.featured-price {
+    color: var(--color-accent);
+    letter-spacing: 0.08em;
+}
+
 .featured-desc {
     font-size: 1.1rem;
     font-weight: 300;
